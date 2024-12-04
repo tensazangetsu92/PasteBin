@@ -1,6 +1,9 @@
 from pydantic import BaseModel
 
-class Paste(BaseModel):
+class Text(BaseModel):
+    id: int
+
+class TextAdd(Text):
     title: str
-    content: str
+    content: str | None
     expiration: int
