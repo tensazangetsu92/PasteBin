@@ -6,3 +6,4 @@ asyncio
 alembic
 pydantic
 pydantic-settings
+boto3
