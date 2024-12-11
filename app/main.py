@@ -1,23 +1,28 @@
-from fastapi import FastAPI
-
-from .schemas import TextAdd
-
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from .schemas import TextCreate, TextResponse
+from .services import create_text
+from .database import async_sessionmaker
 
 app = FastAPI()
 
-app.include_router(router)
+async def get_db() -> AsyncSession:
+    async with async_sessionmaker() as session:
+        yield session
 
-texts = []
-
-@app.post("/add-text/")
-async def add_text(content: str, session: AsyncSession = Depends(get_session)):
-    # Загрузить текст в S3
-    short_key = generate_short_key()
-    s3_url = upload_to_s3(content, f"{short_key}.txt")
-
-    # Сохранить данные в базу
-    new_entry = TextUrlOrm(blob_url=s3_url, short_key=short_key)
-    session.add(new_entry)
-    await session.commit()
-
-    return {"short_key": short_key, "blob_url": s3_url}
+@app.post("", response_model=TextResponse)
+async def add_text(
+    text_data: TextCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = 3,  # Вместо 1 может быть ваша авторизация
+):
+    try:
+        new_text = await create_text(
+            session=db,
+            blob_url=text_data.blob_url,
+            author_id=current_user_id,
+            expires_at=text_data.expires_at,
+        )
+        return new_text
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error: {e}")

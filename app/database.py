@@ -9,12 +9,6 @@ engine = create_async_engine(
     url=settings.DATABASE_URL_asyncpg,
     echo=False,
 )
-async def get_123():
-    async with engine.connect() as conn:
-        res = await conn.execute(text("SELECT 1,2,3 union select 4,5,6"))
-        print(f"{res.first()=}")
-
-asyncio.run(get_123())
 
 new_session = async_sessionmaker(engine, expire_on_commit=False)
 
