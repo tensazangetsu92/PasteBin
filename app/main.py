@@ -10,17 +10,16 @@ async def get_db() -> AsyncSession:
     async with async_sessionmaker() as session:
         yield session
 
-@app.post("", response_model=TextResponse)
+@app.post("/", response_model=TextResponse)
 async def add_text(
     text_data: TextCreate,
     db: AsyncSession = Depends(get_db),
-    current_user_id: int = 3,  # Вместо 1 может быть ваша авторизация
 ):
     try:
         new_text = await create_text(
             session=db,
             blob_url=text_data.blob_url,
-            author_id=current_user_id,
+            author_id=text_data.current_user_id,
             expires_at=text_data.expires_at,
         )
         return new_text

@@ -3,11 +3,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    # Переменные для базы данных
     DB_HOST: str
     DB_PORT: int
     DB_USER: str
     DB_PASS: str
     DB_NAME: str
+
+    # Переменные для Yandex Object Storage
+    ACCESS_KEY: str
+    SECRET_KEY: str
 
     @property
     def DATABASE_URL_asyncpg(self):

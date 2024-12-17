@@ -5,6 +5,7 @@ from datetime import datetime
 class TextCreate(BaseModel):
     blob_url: HttpUrl
     expires_at: Optional[datetime]
+    current_user_id: int
 
 class TextResponse(BaseModel):
     id: int
