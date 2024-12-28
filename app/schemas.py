@@ -3,9 +3,8 @@ from typing import Optional
 from datetime import datetime
 
 class TextCreate(BaseModel):
-    blob_url: HttpUrl
-    expires_at: Optional[datetime]
-    current_user_id: int
+    text: str  # Текст, который вводит пользователь
+    expires_at: Optional[datetime]  # Опциональная дата истечения срока
 
 class TextResponse(BaseModel):
     id: int

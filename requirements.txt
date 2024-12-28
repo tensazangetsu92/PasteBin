@@ -7,3 +7,4 @@ alembic
 pydantic
 pydantic-settings
 boto3
+greenlet

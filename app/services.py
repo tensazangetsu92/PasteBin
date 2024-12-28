@@ -1,41 +1,49 @@
 import secrets
-from typing import Optional
-import datetime
+from datetime import datetime
+from typing import Optional, BinaryIO
 
-from sqlalchemy import select
+from .storage import s3_client
+from .crud import create_text_record, get_text_by_short_key
 from sqlalchemy.ext.asyncio import AsyncSession
-from .models import TextUrlOrm
 
 
 async def generate_short_key(length: int = 8) -> str:
+    """Генерация уникального короткого ключа."""
     return secrets.token_urlsafe(length)[:length]
 
 
-async def create_text(
-        session: AsyncSession,
-        blob_url: str,
-        author_id: int,
-        expires_at: Optional[datetime.datetime] = None
+async def upload_file_to_bucket(bucket_name: str, object_name: str, file_obj: BinaryIO):
+    """Загрузка файла в Yandex Object Storage."""
+    try:
+        s3_client.upload_fileobj(file_obj, bucket_name, object_name)
+        return f"https://storage.yandexcloud.net/{bucket_name}/{object_name}"
+    except Exception as e:
+        raise Exception(f"Ошибка загрузки файла в бакет: {e}")
+
+
+async def upload_file_and_save_to_db(
+    session: AsyncSession,
+    file_obj: BinaryIO,
+    bucket_name: str,
+    object_name: str,
+    author_id: int,
+    expires_at: Optional[datetime] = None,
 ):
+    """Загрузка файла и сохранение данных в БД."""
+    # Загрузка файла в бакет
+    blob_url = await upload_file_to_bucket(bucket_name, object_name, file_obj)
+    # Генерация уникального короткого ключа
     short_key = await generate_short_key()
-
-    # Проверка уникальности (опционально)
-    while True:
-        existing = await session.execute(
-            select(TextUrlOrm).where(TextUrlOrm.short_key == short_key)
-        )
-        if existing.scalar() is None:
-            break
+    # Проверка уникальности короткого ключа
+    while await get_text_by_short_key(session, short_key) is not None:
         short_key = await generate_short_key()
-
-    # Создание новой записи
-    new_text = TextUrlOrm(
+    # Сохранение записи в БД
+    new_text = await create_text_record(
+        session=session,
         blob_url=blob_url,
         short_key=short_key,
         author_id=author_id,
         expires_at=expires_at,
     )
-    session.add(new_text)
-    await session.commit()
-    await session.refresh(new_text)
+
     return new_text

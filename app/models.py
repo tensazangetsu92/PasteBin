@@ -10,9 +10,11 @@ class TextUrlOrm(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     blob_url: Mapped[str] = mapped_column(String, nullable=False)
     short_key: Mapped[str] = mapped_column(String(8), unique=True, nullable=False)
-    # created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    # expires_at: Mapped[datetime.datetime | None] = mapped_column(DateTime, nullable=True)
+    author_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    expires_at: Mapped[DateTime | None] = mapped_column(DateTime, nullable=True)
 
+
+    # created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=datetime.utcnow)
     # author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     # author: Mapped["UserOrm"] = relationship("UserOrm", back_populates="text_urls")
 
