@@ -3,7 +3,7 @@ from datetime import datetime
 
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm.loading import load_on_ident
+from io import BytesIO
 
 from .database import create_tables, delete_tables, new_session
 from .schemas import TextCreate
@@ -33,6 +33,7 @@ async def add_text(
     current_user_id: int = Depends(get_current_user_id),
 ):
     try:
+
         # Парсим дату истечения срока, если указана
         # expires_at_parsed = (
         #     text_data.expires_at
@@ -44,7 +45,6 @@ async def add_text(
         object_name = f"{current_user_id}/{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.txt"
 
         # Преобразуем текст в файл-like объект
-        from io import BytesIO
         file_obj = BytesIO(text_data.text.encode("utf-8"))
 
         # Вызов функции для загрузки файла и записи в БД

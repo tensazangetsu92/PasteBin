@@ -21,6 +21,7 @@ async def create_text_record(
     author_id: int,
     expires_at: Optional[datetime] = None,
 ):
+    print("3")
     """Создать новую запись в базе данных."""
     new_text = TextUrlOrm(
         blob_url=blob_url,
@@ -29,6 +30,7 @@ async def create_text_record(
         expires_at=expires_at,
     )
     session.add(new_text)
-    await session.commit()
+    await session.flush()
     await session.refresh(new_text)
+    print("4")
     return new_text

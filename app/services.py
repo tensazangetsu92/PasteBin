@@ -46,4 +46,6 @@ async def upload_file_and_save_to_db(
         expires_at=expires_at,
     )
 
+    await session.commit()
+
     return new_text
