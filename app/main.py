@@ -1,11 +1,10 @@
 from contextlib import asynccontextmanager
 from datetime import datetime
-
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from io import BytesIO
-
 from .database import create_tables, delete_tables, new_session
+from .scheduler import start_scheduler
 from .schemas import TextCreate
 from .services import upload_file_and_save_to_db
 
@@ -15,6 +14,10 @@ BUCKET_NAME = "texts"
 async def lifespan(app: FastAPI):
     await delete_tables()
     await create_tables()
+    # Создаём сессию вручную
+    async with new_session() as session:
+        # Запускаем планировщик
+        start_scheduler(session)
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -22,6 +25,7 @@ app = FastAPI(lifespan=lifespan)
 async def get_session() -> AsyncSession:
     async with new_session() as session:
         yield session
+
 
 async def get_current_user_id() -> int:
     return 3  # Здесь подключите JWT или другой метод авторизации
