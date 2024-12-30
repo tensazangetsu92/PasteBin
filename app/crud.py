@@ -61,8 +61,7 @@ async def delete_expired_records(session: AsyncSession):
 
         # Удаляем файлы из бакета и записи из базы данных
         for record in expired_records:
-            object_name = f"{record.author_id}/{record.name}.txt"
-            await delete_file_from_bucket("texts", object_name)  # Удаление файла из бакета
+            await delete_file_from_bucket("texts", record.author_id, record.short_key)  # Удаление файла из бакета
             async with session.begin():
                 await session.execute(delete(TextUrlOrm).where(TextUrlOrm.id == record.id))  # Удаление записи из БД
 

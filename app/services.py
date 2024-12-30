@@ -21,14 +21,13 @@ async def upload_file_and_save_to_db(
     expires_at: Optional[datetime] = None,
 ):
     """Загрузка файла и сохранение данных в БД."""
-    # Загрузка файла в бакет
-    object_url_in_bucket = f"{author_id}/{object_name}.txt"
-    blob_url = await upload_file_to_bucket(bucket_name, object_url_in_bucket, file_obj)
     # Генерация уникального короткого ключа
     short_key = await generate_short_key()
     # Проверка уникальности короткого ключа
     while await get_text_by_short_key(session, short_key) is not None:
         short_key = await generate_short_key()
+    # Загрузка файла в бакет
+    blob_url = await upload_file_to_bucket(bucket_name, author_id ,short_key, file_obj)
     # Сохранение записи в БД
     new_text = await create_text_record(
         session=session,
