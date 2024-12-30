@@ -8,6 +8,7 @@ class TextUrlOrm(Base):
     __tablename__ = "text_urls"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
     blob_url: Mapped[str] = mapped_column(String, nullable=False)
     short_key: Mapped[str] = mapped_column(String(8), unique=True, nullable=False)
     author_id: Mapped[int] = mapped_column(Integer, nullable=False)

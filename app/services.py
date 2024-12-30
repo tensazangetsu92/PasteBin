@@ -2,7 +2,7 @@ import secrets
 from datetime import datetime
 from typing import Optional, BinaryIO
 
-from .storage import s3_client
+from .storage import s3_client, upload_file_to_bucket
 from .crud import create_text_record, get_text_by_short_key
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,15 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 async def generate_short_key(length: int = 8) -> str:
     """Генерация уникального короткого ключа."""
     return secrets.token_urlsafe(length)[:length]
-
-
-async def upload_file_to_bucket(bucket_name: str, object_name: str, file_obj: BinaryIO):
-    """Загрузка файла в Yandex Object Storage."""
-    try:
-        s3_client.upload_fileobj(file_obj, bucket_name, object_name)
-        return f"https://storage.yandexcloud.net/{bucket_name}/{object_name}"
-    except Exception as e:
-        raise Exception(f"Ошибка загрузки файла в бакет: {e}")
 
 
 async def upload_file_and_save_to_db(
@@ -31,7 +22,8 @@ async def upload_file_and_save_to_db(
 ):
     """Загрузка файла и сохранение данных в БД."""
     # Загрузка файла в бакет
-    blob_url = await upload_file_to_bucket(bucket_name, object_name, file_obj)
+    object_url_in_bucket = f"{author_id}/{object_name}.txt"
+    blob_url = await upload_file_to_bucket(bucket_name, object_url_in_bucket, file_obj)
     # Генерация уникального короткого ключа
     short_key = await generate_short_key()
     # Проверка уникальности короткого ключа
@@ -40,6 +32,7 @@ async def upload_file_and_save_to_db(
     # Сохранение записи в БД
     new_text = await create_text_record(
         session=session,
+        object_name=object_name,
         blob_url=blob_url,
         short_key=short_key,
         author_id=author_id,

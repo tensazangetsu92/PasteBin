@@ -3,8 +3,10 @@ from typing import Optional
 from datetime import datetime
 
 class TextCreate(BaseModel):
-    text: str  # Текст, который вводит пользователь
-    expires_at: Optional[datetime]  # Опциональная дата истечения срока
+    name: str = "Untitled"
+    text: str = "text"
+    expires_at: Optional[datetime]
+
 
 class TextResponse(BaseModel):
     id: int

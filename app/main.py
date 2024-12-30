@@ -44,9 +44,8 @@ async def add_text(
         #     if isinstance(text_data.expires_at, datetime)  # Если уже datetime, оставляем как есть
         #     else datetime.strptime(text_data.expires_at, "%Y-%m-%d")  # Иначе парсим из строки
         # )
-
         # Генерация имени файла в бакете
-        object_name = f"{current_user_id}/{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.txt"
+        # object_name = f"{current_user_id}/{text_data.name}.txt"
 
         # Преобразуем текст в файл-like объект
         file_obj = BytesIO(text_data.text.encode("utf-8"))
@@ -56,7 +55,7 @@ async def add_text(
             session=db,
             file_obj=file_obj,
             bucket_name=BUCKET_NAME,
-            object_name=object_name,
+            object_name=text_data.name,
             author_id=current_user_id,
             expires_at=text_data.expires_at.replace(tzinfo=None),
         )
