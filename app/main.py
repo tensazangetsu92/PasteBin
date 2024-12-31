@@ -3,10 +3,12 @@ from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from io import BytesIO
+from .crud import get_text_by_short_key
 from .database import create_tables, delete_tables, new_session
 from .scheduler import start_scheduler
 from .schemas import TextCreate
 from .services import upload_file_and_save_to_db
+from .storage import download_file_from_bucket
 
 BUCKET_NAME = "texts"
 
@@ -37,16 +39,6 @@ async def add_text(
     current_user_id: int = Depends(get_current_user_id),
 ):
     try:
-
-        # Парсим дату истечения срока, если указана
-        # expires_at_parsed = (
-        #     text_data.expires_at
-        #     if isinstance(text_data.expires_at, datetime)  # Если уже datetime, оставляем как есть
-        #     else datetime.strptime(text_data.expires_at, "%Y-%m-%d")  # Иначе парсим из строки
-        # )
-        # Генерация имени файла в бакете
-        # object_name = f"{current_user_id}/{text_data.name}.txt"
-
         # Преобразуем текст в файл-like объект
         file_obj = BytesIO(text_data.text.encode("utf-8"))
 
@@ -62,3 +54,23 @@ async def add_text(
         return {"short_key": new_text.short_key, "url": new_text.blob_url}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error: {e}")
+
+
+@app.get("/{short_key}")
+async def get_text(
+        short_key: str, session:
+        AsyncSession = Depends(get_session)
+):
+    # Найти запись по короткому ключу
+    text_record = await get_text_by_short_key(session, short_key)
+    if not text_record:
+        raise HTTPException(status_code=404, detail="Text not found")
+
+    # Скачать текст из бакета
+    try:
+        text_content = await download_file_from_bucket(text_record.blob_url)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving text: {e}")
+
+    return {"text": text_content}
+

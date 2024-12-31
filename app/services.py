@@ -2,7 +2,7 @@ import secrets
 from datetime import datetime
 from typing import Optional, BinaryIO
 
-from .storage import s3_client, upload_file_to_bucket
+from .storage import upload_file_to_bucket
 from .crud import create_text_record, get_text_by_short_key
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -37,7 +37,6 @@ async def upload_file_and_save_to_db(
         author_id=author_id,
         expires_at=expires_at,
     )
-
     await session.commit()
-
     return new_text
+

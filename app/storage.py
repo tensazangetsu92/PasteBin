@@ -1,7 +1,8 @@
 from typing import BinaryIO
-
 import boto3
+from botocore.exceptions import ClientError
 from .config import settings
+from .utils import parse_blob_url
 
 # Инициализация клиента для Yandex Object Storage
 s3_client = boto3.client(
@@ -21,8 +22,19 @@ async def upload_file_to_bucket(bucket_name: str, author_id: int, short_key: str
         raise Exception(f"Ошибка загрузки файла в бакет: {e}")
 
 
+async def download_file_from_bucket(blob_url: str) -> str:
+    """Скачивание текста из бакета."""
+    try:
+        bucket_name, object_name = parse_blob_url(blob_url)
+        response = s3_client.get_object(Bucket=bucket_name, Key=object_name)
+        text_content = response["Body"].read().decode("utf-8")
+        return text_content
+    except ClientError as e:
+        raise Exception(f"Error downloading file from bucket: {e}")
+
+
 async def delete_file_from_bucket(bucket_name: str, author_id: int, object_short_key: str):
-    """Удаляет файл из бакета по URL ."""
+    """Удаление файла из бакета по URL ."""
     object_url_in_bucket = f"{author_id}/{object_short_key}.txt"
     try:
         s3_client.delete_object(Bucket=bucket_name, Key=object_url_in_bucket)

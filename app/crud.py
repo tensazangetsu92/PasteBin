@@ -7,14 +7,6 @@ from .models import TextUrlOrm
 from .storage import delete_file_from_bucket
 
 
-async def get_text_by_short_key(session: AsyncSession, short_key: str):
-    """Получить запись по короткому ключу."""
-    result = await session.execute(
-        select(TextUrlOrm).where(TextUrlOrm.short_key == short_key)
-    )
-    return result.scalar()
-
-
 async def create_text_record(
     session: AsyncSession,
     object_name: str,
@@ -35,6 +27,14 @@ async def create_text_record(
     await session.flush()
     await session.refresh(new_text)
     return new_text
+
+async def get_text_by_short_key(session: AsyncSession, short_key: str):
+    """Получить запись по короткому ключу."""
+    result = await session.execute(
+        select(TextUrlOrm).where(TextUrlOrm.short_key == short_key)
+    )
+    return result.scalar()
+
 
 async def delete_text_record(
         session: AsyncSession,
