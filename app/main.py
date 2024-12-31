@@ -8,7 +8,9 @@ from .database import create_tables, delete_tables, new_session
 from .scheduler import start_scheduler
 from .schemas import TextCreate
 from .services import upload_file_and_save_to_db
-from .storage import download_file_from_bucket
+from .storage import get_file_from_bucket, get_file_size_from_bucket
+from .utils import convert_to_kilobytes
+from fastapi.responses import RedirectResponse
 
 BUCKET_NAME = "texts"
 
@@ -51,7 +53,15 @@ async def add_text(
             author_id=current_user_id,
             expires_at=text_data.expires_at.replace(tzinfo=None),
         )
-        return {"short_key": new_text.short_key, "url": new_text.blob_url}
+        # return {
+        #     "name": new_text.name,
+        #     "blob_url" : new_text.blob_url,
+        #     "short_key": new_text.short_key,
+        #     "url": new_text.blob_url,
+        #     "expires_at" : new_text.expires_at,
+        #     }
+        return RedirectResponse(url=f"/{new_text.short_key}", status_code=303)
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error: {e}")
 
@@ -68,9 +78,17 @@ async def get_text(
 
     # Скачать текст из бакета
     try:
-        text_content = await download_file_from_bucket(text_record.blob_url)
+        text_content = await get_file_from_bucket(text_record.blob_url)
+        text_size_in_bytes = await get_file_size_from_bucket(text_record.blob_url)
+        text_size_in_kilobytes = convert_to_kilobytes(text_size_in_bytes)
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving text: {e}")
 
-    return {"text": text_content}
+    return {
+        "name": text_record.name,
+        "text": text_content,
+        "text_size": text_size_in_kilobytes,
+    }
+
 

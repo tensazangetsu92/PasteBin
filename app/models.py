@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from .database import Base
 from sqlalchemy import Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -12,10 +12,11 @@ class TextUrlOrm(Base):
     blob_url: Mapped[str] = mapped_column(String, nullable=False)
     short_key: Mapped[str] = mapped_column(String(8), unique=True, nullable=False)
     author_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=datetime.utcnow)
     expires_at: Mapped[DateTime | None] = mapped_column(DateTime, nullable=True)
 
 
-    # created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
     # author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     # author: Mapped["UserOrm"] = relationship("UserOrm", back_populates="text_urls")
 
