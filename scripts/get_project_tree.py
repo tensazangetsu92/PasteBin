@@ -37,7 +37,7 @@ project_directory = '..'  # Путь к корню проекта
 exclude_dirs = [
     os.path.join('.venv', 'Lib', 'site-packages'),
     os.path.join('.venv', 'Scripts')
-]  # Папки для исключения
+]
 
 tree = get_project_tree(project_directory, max_depth=3, exclude_dirs=exclude_dirs)
 print_tree(tree)

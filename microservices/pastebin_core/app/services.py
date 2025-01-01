@@ -12,7 +12,7 @@ async def generate_short_key(length: int = 8) -> str:
     """Генерация уникального короткого ключа."""
     return secrets.token_urlsafe(length)[:length]
 
-HASH_SERVER_URL = "http://127.0.0.1:8002/get_hash"
+HASH_SERVER_URL = "http://127.0.0.1:8001/get_hash"
 
 async def fetch_hash():
     """Запрос хеша у хеш-сервера."""

@@ -16,7 +16,7 @@ BUCKET_NAME = "texts"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await delete_tables()
+    # await delete_tables()
     await create_tables()
     # Создаём сессию вручную
     async with new_session() as session:
@@ -78,7 +78,7 @@ async def get_text(
     return {
         "name": text_record.name,
         "text": text_content,
-        "text_size": text_size_in_kilobytes,
+        "text_size_kilobytes": text_size_in_kilobytes,
     }
 
 
