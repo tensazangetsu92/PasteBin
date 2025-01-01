@@ -21,7 +21,6 @@ async def upload_file_to_bucket(bucket_name: str, author_id: int, short_key: str
     except Exception as e:
         raise Exception(f"Ошибка загрузки файла в бакет: {e}")
 
-
 async def get_file_from_bucket(blob_url: str) -> str:
     """Скачивание текста из бакета."""
     try:
@@ -44,7 +43,6 @@ async def get_file_size_from_bucket(blob_url: str) -> int:
     except ClientError as e:
         print(f"Ошибка при получении размера файла: {e}")
         return None
-
 
 async def delete_file_from_bucket(bucket_name: str, author_id: int, object_short_key: str):
     """Удаление файла из бакета по URL ."""

@@ -30,9 +30,10 @@ async def get_session() -> AsyncSession:
     async with new_session() as session:
         yield session
 
-
 async def get_current_user_id() -> int:
     return 3  # Здесь подключите JWT или другой метод авторизации
+
+
 
 @app.post("/")
 async def add_text(
@@ -41,10 +42,7 @@ async def add_text(
     current_user_id: int = Depends(get_current_user_id),
 ):
     try:
-        # Преобразуем текст в файл-like объект
         file_obj = BytesIO(text_data.text.encode("utf-8"))
-
-        # Вызов функции для загрузки файла и записи в БД
         new_text = await upload_file_and_save_to_db(
             session=db,
             file_obj=file_obj,
@@ -53,13 +51,7 @@ async def add_text(
             author_id=current_user_id,
             expires_at=text_data.expires_at.replace(tzinfo=None),
         )
-        # return {
-        #     "name": new_text.name,
-        #     "blob_url" : new_text.blob_url,
-        #     "short_key": new_text.short_key,
-        #     "url": new_text.blob_url,
-        #     "expires_at" : new_text.expires_at,
-        #     }
+
         return RedirectResponse(url=f"/{new_text.short_key}", status_code=303)
 
     except Exception as e:
@@ -71,12 +63,10 @@ async def get_text(
         short_key: str, session:
         AsyncSession = Depends(get_session)
 ):
-    # Найти запись по короткому ключу
     text_record = await get_text_by_short_key(session, short_key)
     if not text_record:
         raise HTTPException(status_code=404, detail="Text not found")
 
-    # Скачать текст из бакета
     try:
         text_content = await get_file_from_bucket(text_record.blob_url)
         text_size_in_bytes = await get_file_size_from_bucket(text_record.blob_url)

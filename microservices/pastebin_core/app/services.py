@@ -1,6 +1,7 @@
 import secrets
 from datetime import datetime
 from typing import Optional, BinaryIO
+import httpx
 
 from .storage import upload_file_to_bucket
 from .crud import create_text_record, get_text_by_short_key
@@ -11,6 +12,13 @@ async def generate_short_key(length: int = 8) -> str:
     """Генерация уникального короткого ключа."""
     return secrets.token_urlsafe(length)[:length]
 
+HASH_SERVER_URL = "http://127.0.0.1:8002/get_hash"
+
+async def fetch_hash():
+    """Запрос хеша у хеш-сервера."""
+    async with httpx.AsyncClient() as client:
+        response = await client.get(HASH_SERVER_URL)
+        return response.json()["hash"]
 
 async def upload_file_and_save_to_db(
     session: AsyncSession,
@@ -22,7 +30,8 @@ async def upload_file_and_save_to_db(
 ):
     """Загрузка файла и сохранение данных в БД."""
     # Генерация уникального короткого ключа
-    short_key = await generate_short_key()
+    # short_key = await generate_short_key()
+    short_key = await fetch_hash()
     # Проверка уникальности короткого ключа
     while await get_text_by_short_key(session, short_key) is not None:
         short_key = await generate_short_key()

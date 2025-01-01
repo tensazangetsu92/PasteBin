@@ -1,5 +1,3 @@
 .venv/
 .idea/
-.env
-.scripts/
-/scripts/get_tree.py
+microservices/pastebin_core/.env

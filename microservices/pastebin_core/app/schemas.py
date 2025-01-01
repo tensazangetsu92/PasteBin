@@ -5,7 +5,7 @@ from datetime import datetime
 class TextCreate(BaseModel):
     name: str = "Untitled"
     text: str = "Some text"
-    expires_at: Optional[datetime] = "2025-12-30T14:01:49.746Z"
+    expires_at: Optional[datetime] = "2023-12-30T14:01:49.746Z"
 
 
 class TextResponse(BaseModel):
