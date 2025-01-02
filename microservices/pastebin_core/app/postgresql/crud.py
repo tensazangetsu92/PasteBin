@@ -1,10 +1,9 @@
 from datetime import datetime
 from typing import Optional
-
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from .models import TextUrlOrm
-from .storage import delete_file_from_bucket
+from microservices.pastebin_core.app.postgresql.models import TextUrlOrm
+from microservices.pastebin_core.app.yandex_bucket.storage import delete_file_from_bucket
 
 
 async def create_text_record(

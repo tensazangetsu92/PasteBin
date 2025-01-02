@@ -1,14 +1,14 @@
 from contextlib import asynccontextmanager
-from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from io import BytesIO
-from .crud import get_text_by_short_key
-from .database import create_tables, delete_tables, new_session
+from microservices.pastebin_core.app.postgresql.crud import get_text_by_short_key
+from microservices.pastebin_core.app.postgresql.database import create_tables, new_session
+from .redis.redis_client import connect_to_redis, disconnect_from_redis
 from .scheduler import start_scheduler
 from .schemas import TextCreate
 from .services import upload_file_and_save_to_db
-from .storage import get_file_from_bucket, get_file_size_from_bucket
+from microservices.pastebin_core.app.yandex_bucket.storage import get_file_from_bucket, get_file_size_from_bucket
 from .utils import convert_to_kilobytes
 from fastapi.responses import RedirectResponse
 
@@ -18,11 +18,11 @@ BUCKET_NAME = "texts"
 async def lifespan(app: FastAPI):
     # await delete_tables()
     await create_tables()
-    # Создаём сессию вручную
     async with new_session() as session:
-        # Запускаем планировщик
         start_scheduler(session)
+    await connect_to_redis()
     yield
+    await disconnect_from_redis()
 
 app = FastAPI(lifespan=lifespan)
 

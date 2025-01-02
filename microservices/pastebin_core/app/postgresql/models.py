@@ -1,7 +1,7 @@
 from datetime import datetime
-from .database import Base
-from sqlalchemy import Integer, String, ForeignKey, DateTime
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from microservices.pastebin_core.app.postgresql.database import Base
+from sqlalchemy import Integer, String, DateTime
+from sqlalchemy.orm import Mapped, mapped_column
 
 
 class TextUrlOrm(Base):
