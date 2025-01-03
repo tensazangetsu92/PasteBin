@@ -9,3 +9,4 @@ pydantic-settings
 boto3
 greenlet
 apscheduler
+redis
