@@ -4,9 +4,9 @@ from fastapi import FastAPI
 
 from .redis import connect_to_redis, disconnect_from_redis, check_and_generate_hashes
 
-# Хеш-пул и минимальное количество
 HASH_POOL_SIZE = 100
 MIN_HASH_COUNT = 100
+HASH_CHECK_INTERVAL = 100
 
 scheduler = AsyncIOScheduler()
 
@@ -14,7 +14,7 @@ scheduler = AsyncIOScheduler()
 async def lifespan(app: FastAPI):
     # Инициализация Redis и сохранение его в app.state
     app.state.redis = await connect_to_redis()
-    scheduler.add_job(check_and_generate_hashes, 'interval', seconds=10, args=[app.state.redis])
+    scheduler.add_job(check_and_generate_hashes, 'interval', seconds=HASH_CHECK_INTERVAL, args=[app.state.redis])
     scheduler.start()
     yield
     await disconnect_from_redis(app.state.redis)

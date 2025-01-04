@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # Переменные для базы данных
+    # Переменные для базы данных PostgreSql
     DB_HOST: str
     DB_PORT: int
     DB_USER: str
@@ -13,6 +13,13 @@ class Settings(BaseSettings):
     # Переменные для Yandex Object Storage
     ACCESS_KEY: str
     SECRET_KEY: str
+
+    # Переменные для базы данных Redis
+    DB_REDIS_HOST: str
+    DB_REDIS_PORT: int
+    DB_REDIS_INDEX: int
+    DB_REDIS_USERNAME: str
+    DB_REDIS_PASSWORD: str
 
     @property
     def DATABASE_URL_asyncpg(self):
