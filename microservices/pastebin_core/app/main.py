@@ -18,11 +18,11 @@ BUCKET_NAME = "texts"
 async def lifespan(app: FastAPI):
     # await delete_tables()
     await create_tables()
-    app.state.redis = await connect_to_redis()
+    # app.state.redis = await connect_to_redis()
     async with new_session() as session:
         start_scheduler(session)
     yield
-    await disconnect_from_redis(app.state.redis)
+    # await disconnect_from_redis(app.state.redis)
 
 app = FastAPI(lifespan=lifespan)
 
@@ -32,6 +32,7 @@ async def get_session() -> AsyncSession:
 
 async def get_current_user_id() -> int:
     return 3  # Здесь подключите JWT или другой метод авторизации
+
 
 
 @app.post("/")
@@ -44,7 +45,7 @@ async def add_text(
         file_obj = BytesIO(text_data.text.encode("utf-8"))
         new_text = await upload_file_and_save_to_db(
             session=db,
-            redis_client=app.state.redis,
+            # redis_client=app.state.redis,
             file_obj=file_obj,
             bucket_name=BUCKET_NAME,
             object_name=text_data.name,

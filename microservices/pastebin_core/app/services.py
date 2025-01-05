@@ -1,6 +1,8 @@
 import secrets
 from datetime import datetime
 from typing import Optional, BinaryIO
+
+import httpx
 import redis.asyncio as redis
 
 from microservices.pastebin_core.app.yandex_bucket.storage import upload_file_to_bucket
@@ -14,17 +16,20 @@ async def generate_short_key(length: int = 8) -> str:
 
 HASH_SERVER_URL = "http://127.0.0.1:8001/get_hash"
 
-async def get_hash(redis_client: redis.Redis):
-    """Получение хешей из Redis."""
-    hash = await redis_client.rpop("hash_pool")
 
-    if hash:
-        return hash
-    return {"error": "No hash available"}
+async def get_hash() -> str:
+    """Получение хэша от хэш-сервера через HTTP-запрос."""
+    async with httpx.AsyncClient() as client:
+        response = await client.get(HASH_SERVER_URL)
+        if response.status_code == 200:
+            data = response.json()
+            if "hash" in data:
+                return data["hash"]
+        raise ValueError("Failed to fetch hash from hash server")
 
 async def upload_file_and_save_to_db(
     session: AsyncSession,
-    redis_client: redis.Redis,
+    # redis_client: redis.Redis,
     file_obj: BinaryIO,
     bucket_name: str,
     object_name: str,
@@ -34,7 +39,7 @@ async def upload_file_and_save_to_db(
     """Загрузка файла и сохранение данных в БД."""
     # Генерация уникального короткого ключа
     # short_key = await generate_short_key()
-    short_key = await get_hash(redis_client)
+    short_key = await get_hash()
     # Проверка уникальности короткого ключа
     while await get_text_by_short_key(session, short_key) is not None:
         short_key = await generate_short_key()
