@@ -1,3 +1,4 @@
+import json
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,11 +19,11 @@ BUCKET_NAME = "texts"
 async def lifespan(app: FastAPI):
     # await delete_tables()
     await create_tables()
-    # app.state.redis = await connect_to_redis()
+    app.state.redis = await connect_to_redis()
     async with new_session() as session:
         start_scheduler(session)
     yield
-    # await disconnect_from_redis(app.state.redis)
+    await disconnect_from_redis(app.state.redis)
 
 app = FastAPI(lifespan=lifespan)
 
@@ -64,14 +65,22 @@ async def get_text(
         short_key: str, session:
         AsyncSession = Depends(get_session)
 ):
-    text_record = await get_text_by_short_key(session, short_key)
-    if not text_record:
-        raise HTTPException(status_code=404, detail="Text not found")
+    async with app.state.redis.pipeline() as pipe:
+        pipe.get(f"popular_post:{short_key}")
+        pipe.incr(f"post_views:{short_key}")
+        cached_post, views = await pipe.execute()
+
+    if cached_post:
+        return json.loads(cached_post)
+    else:
+        text_record = await get_text_by_short_key(session, short_key)
+        if not text_record:
+            raise HTTPException(status_code=404, detail="Text not found")
 
     try:
-        text_content = await get_file_from_bucket(text_record.blob_url)
-        text_size_in_bytes = await get_file_size_from_bucket(text_record.blob_url)
-        text_size_in_kilobytes = convert_to_kilobytes(text_size_in_bytes)
+        file_data = await get_file_from_bucket(text_record.blob_url)
+        text_content = file_data["content"]
+        text_size_in_kilobytes = convert_to_kilobytes(file_data["size"])
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving text: {e}")
@@ -81,5 +90,3 @@ async def get_text(
         "text": text_content,
         "text_size_kilobytes": text_size_in_kilobytes,
     }
-
-
