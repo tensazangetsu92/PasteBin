@@ -3,10 +3,7 @@ from contextlib import asynccontextmanager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from collections import deque
 import secrets
-
-HASH_POOL_SIZE = 2  # Количество хэшей для генерации
-MIN_HASH_COUNT = 2  # Минимальное количество хэшей в пуле
-HASH_CHECK_INTERVAL = 3  # Интервал проверки в секундах
+from .config import settings
 
 hash_pool = deque()
 
@@ -31,7 +28,7 @@ def pop_hash() -> str | None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    scheduler.add_job(check_and_generate_hashes, 'interval', seconds=HASH_CHECK_INTERVAL, args=[MIN_HASH_COUNT, HASH_POOL_SIZE])
+    scheduler.add_job(check_and_generate_hashes, 'interval', seconds=settings.HASH_CHECK_INTERVAL, args=[settings.MIN_HASH_COUNT, settings.HASH_POOL_SIZE])
     scheduler.start()
     yield
     scheduler.shutdown()
@@ -48,7 +45,6 @@ def generate_more_hashes(count: int = 10):
 def get_hash():
     """Получение хэша из памяти."""
     hash_value = pop_hash()
-    print(list(hash_pool))
     if hash_value:
         return {"hash": hash_value}
     return {"error": "No hash available"}

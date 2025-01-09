@@ -9,3 +9,6 @@ def start_scheduler(session: AsyncSession):
     scheduler.add_job(delete_expired_records, 'interval', seconds=60*60, args=[session])
     scheduler.start()
     # print("Планировщик запущен")
+
+def terminate_scheduler():
+    scheduler.shutdown()

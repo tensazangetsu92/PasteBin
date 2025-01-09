@@ -1,4 +1,8 @@
+import json
+
 import redis.asyncio as redis
+from redis.asyncio import Redis
+
 from microservices.pastebin_core.app.config import settings
 
 
@@ -22,3 +26,15 @@ async def disconnect_from_redis(redis_client: redis.Redis):
     """Отключение от Redis."""
     if redis_client:
         await redis_client.close()
+
+async def get_and_increment_views(redis: Redis, short_key: str):
+    """Получить пост из кэша и увеличить счетчик просмотров."""
+    async with redis.pipeline() as pipe:
+        pipe.get(f"popular_post:{short_key}")
+        pipe.incr(f"post_views:{short_key}")
+        cached_post, views = await pipe.execute()
+    return cached_post, views
+
+async def cache_post(redis: Redis, short_key: str, post_data: dict, ttl: int = 3600):
+    """Сохранить пост в кэш."""
+    await redis.set(f"popular_post:{short_key}", json.dumps(post_data), ex=ttl)

@@ -5,15 +5,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from io import BytesIO
 from microservices.pastebin_core.app.postgresql.crud import get_text_by_short_key
 from microservices.pastebin_core.app.postgresql.database import create_tables, new_session, delete_tables
-from .redis.redis import connect_to_redis, disconnect_from_redis
-from .scheduler import start_scheduler
+from .redis.redis import connect_to_redis, disconnect_from_redis, get_and_increment_views, cache_post
+from .scheduler import start_scheduler, terminate_scheduler
 from .schemas import TextCreate
 from .services import upload_file_and_save_to_db
 from microservices.pastebin_core.app.yandex_bucket.storage import get_file_from_bucket
 from .utils import convert_to_kilobytes
 from fastapi.responses import RedirectResponse
+from .config import settings
 
-BUCKET_NAME = "texts"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,9 +23,11 @@ async def lifespan(app: FastAPI):
     async with new_session() as session:
         start_scheduler(session)
     yield
+    terminate_scheduler()
     await disconnect_from_redis(app.state.redis)
 
 app = FastAPI(lifespan=lifespan)
+
 
 async def get_session() -> AsyncSession:
     async with new_session() as session:
@@ -48,7 +50,7 @@ async def add_text(
             session=db,
             # redis_client=app.state.redis,
             file_obj=file_obj,
-            bucket_name=BUCKET_NAME,
+            bucket_name=settings.BUCKET_NAME,
             object_name=text_data.name,
             author_id=current_user_id,
             expires_at=text_data.expires_at.replace(tzinfo=None),
@@ -64,11 +66,7 @@ async def get_text(
         short_key: str, session:
         AsyncSession = Depends(get_session)
 ):
-
-    async with app.state.redis.pipeline() as pipe:
-        pipe.get(f"popular_post:{short_key}")
-        pipe.incr(f"post_views:{short_key}")
-        cached_post, views = await pipe.execute()
+    cached_post, views = await get_and_increment_views(app.state.redis, short_key)
 
     if cached_post:
         print("CACHE")
@@ -80,19 +78,15 @@ async def get_text(
 
     try:
         file_data = await get_file_from_bucket(text_record.blob_url)
-        text_content = file_data["content"]
-        text_size_in_kilobytes = convert_to_kilobytes(file_data["size"])
+        response = {
+            "name": text_record.name,
+            "text": file_data["content"],
+            "text_size_kilobytes": convert_to_kilobytes(file_data["size"]),
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving text: {e}")
-    response = {
-        "name": text_record.name,
-        "text": text_content,
-        "text_size_kilobytes": text_size_in_kilobytes,
-    }
-    if views >= 2:
-        await app.state.redis.set(
-            f"popular_post:{short_key}",
-            json.dumps(response),
-            ex=3600
-        )
+
+    if views >= settings.CACHE_VIEWS_THRESHOLD:
+        await cache_post(app.state.redis, short_key, response)
+
     return response
