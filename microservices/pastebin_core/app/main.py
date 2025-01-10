@@ -82,11 +82,12 @@ async def get_text(
             "name": text_record.name,
             "text": file_data["content"],
             "text_size_kilobytes": convert_to_kilobytes(file_data["size"]),
+            "short_key" : short_key,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving text: {e}")
 
     if views >= settings.CACHE_VIEWS_THRESHOLD:
-        await cache_post(app.state.redis, short_key, response)
+        await cache_post(app.state.redis, short_key, response, settings.TTL)
 
     return response
