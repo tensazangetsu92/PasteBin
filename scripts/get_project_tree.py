@@ -1,5 +1,7 @@
 import os
 
+file_extensions  = ('.py', '.json', '.yaml', '.txt', '.js', '.css', '.html', '.png')
+
 def get_project_tree(directory, max_depth=2, exclude_dirs=None):
     tree = {}
     exclude_dirs = exclude_dirs or []  # Список папок для исключения
@@ -18,7 +20,7 @@ def get_project_tree(directory, max_depth=2, exclude_dirs=None):
             dirs.clear()
 
         # Собираем только основные файлы
-        important_files = [file for file in files if file.endswith(('.py', '.json', '.yaml', '.txt'))]
+        important_files = [file for file in files if file.endswith(file_extensions)]
         if important_files:
             tree[root] = important_files
 

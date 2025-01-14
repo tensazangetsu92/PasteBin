@@ -13,6 +13,7 @@ from microservices.pastebin_core.app.yandex_bucket.storage import get_file_from_
 from .utils import convert_to_kilobytes
 from fastapi.responses import RedirectResponse
 from .config import settings
+from .middlewares import setup_cors
 
 
 @asynccontextmanager
@@ -27,7 +28,7 @@ async def lifespan(app: FastAPI):
     await disconnect_from_redis(app.state.redis)
 
 app = FastAPI(lifespan=lifespan)
-
+setup_cors(app)
 
 async def get_session() -> AsyncSession:
     async with new_session() as session:
