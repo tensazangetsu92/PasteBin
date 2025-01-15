@@ -35,7 +35,6 @@ async def upload_file_and_save_to_db(
     author_id: int,
     expires_at: Optional[datetime] = None,
 ):
-    print("a")
     """Загрузка файла и сохранение данных в БД."""
     short_key = await get_hash()
     while await get_text_by_short_key(session, short_key) is not None:
