@@ -23,7 +23,8 @@ class Settings(BaseSettings):
 
     CACHE_VIEWS_THRESHOLD: int # Минимальное количество просмотров для добавления в кэш
     HASH_SERVER_URL: str
-    TTL: int
+    TTL_POSTS: int
+    TTL_VIEWS: int
 
     @property
     def DATABASE_URL_asyncpg(self):

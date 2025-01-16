@@ -38,7 +38,8 @@ def print_tree(tree):
 project_directory = '..'  # Путь к корню проекта
 exclude_dirs = [
     os.path.join('.venv', 'Lib', 'site-packages'),
-    os.path.join('.venv', 'Scripts')
+    os.path.join('.venv', 'Scripts'),
+    os.path.join('microservices','pastebin_frontend','node_modules'),
 ]
 
 tree = get_project_tree(project_directory, max_depth=3, exclude_dirs=exclude_dirs)

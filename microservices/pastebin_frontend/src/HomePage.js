@@ -17,7 +17,7 @@ function HomePage() {
       await axios.post('http://localhost:8000/api/', {
         name: postName || 'Untitled', // Если название пустое, использовать "Untitled"
         text: postContent,
-        expires_at: expiresAt || null, // Если дата не указана, оставить null
+        expires_at: expiresAt || "2023-12-30T14:01:49.746Z", // Если дата не указана, оставить null
       });
       setResponseMessage('Пост успешно добавлен!');
       setPostName('');

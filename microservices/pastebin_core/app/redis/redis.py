@@ -29,23 +29,14 @@ async def disconnect_from_redis(redis_client: redis.Redis):
         await redis_client.close()
 
 async def get_and_increment_views(redis: Redis, short_key: str):
-    """Получить пост из кэша и увеличить счетчик просмотров с помощью Lua."""
-    lua_script = """
-    local post = redis.call("GET", KEYS[1])
-    local views = redis.call("INCR", KEYS[2])
-    return {post, views}
-    """
-    keys = [f"popular_post:{short_key}", f"post_views:{short_key}"]
-    result = await redis.eval(lua_script, len(keys), *keys)
-    cached_post, views = result[0], int(result[1])
+    """Получить пост из кэша и увеличить счетчик просмотров."""
+    async with redis.pipeline() as pipe:
+        pipe.get(f"popular_post:{short_key}")
+        pipe.incr(f"post_views:{short_key}")
+        pipe.expire(f"post_views:{short_key}", settings.TTL_VIEWS)
+        cached_post, views, ttl_set_result  = await pipe.execute()
     return cached_post, views
 
-
-async def cache_post(redis: Redis, short_key: str, post_data: dict, ttl: int = 3600):
-    """Сохранить пост в кэш с помощью Lua."""
-    lua_script = """
-    redis.call("SET", KEYS[1], ARGV[1], "EX", ARGV[2])
-    """
-    key = f"popular_post:{short_key}"
-    value = json.dumps(post_data)
-    await redis.eval(lua_script, 1, key, value, ttl)
+async def cache_post(redis: Redis, short_key: str, post_data: dict, ttl: int = 10):
+    """Сохранить пост в кэш."""
+    await redis.set(f"popular_post:{short_key}", json.dumps(post_data), ex=ttl)

@@ -72,6 +72,6 @@ async def get_text(
         raise HTTPException(status_code=500, detail=f"Error retrieving text: {e}")
 
     if views >= settings.CACHE_VIEWS_THRESHOLD:
-        await cache_post(redis, short_key, response, settings.TTL)
+        await cache_post(redis, short_key, response, settings.TTL_POSTS)
 
     return response
