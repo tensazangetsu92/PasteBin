@@ -51,18 +51,15 @@ async def get_text(
     short_key: str,
     session: AsyncSession = Depends(get_session),
 ):
-    print('0')
 
     redis = request.app.state.redis  # Получение Redis из состояния приложения
     cached_post, views = await get_and_increment_views(redis, short_key)
 
     if cached_post:
         return json.loads(cached_post)
-    print('1')
     text_record = await get_text_by_short_key(session, short_key)
     if not text_record:
         raise HTTPException(status_code=404, detail="Text not found")
-    print('2')
     try:
         file_data = await get_file_from_bucket(text_record.blob_url)
         response = {
