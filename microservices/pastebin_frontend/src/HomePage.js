@@ -4,8 +4,21 @@ import axios from 'axios';
 function HomePage() {
   const [postName, setPostName] = useState(''); // Для названия поста
   const [postContent, setPostContent] = useState(''); // Для текста поста
-  const [expiresAt, setExpiresAt] = useState(''); // Для даты истечения
+  const [expiresAt, setExpiresAt] = useState('never'); // Для времени истечения
   const [responseMessage, setResponseMessage] = useState('');
+
+  const expirationOptions = {
+    never: null,
+    'burn after read': 0,
+    '10 minutes': 10 * 60,
+    '1 hour': 60 * 60,
+    '1 day': 24 * 60 * 60,
+    '1 week': 7 * 24 * 60 * 60,
+    '2 weeks': 14 * 24 * 60 * 60,
+    '1 month': 30 * 24 * 60 * 60,
+    '6 months': 180 * 24 * 60 * 60,
+    '1 year': 365 * 24 * 60 * 60,
+  };
 
   const handleSubmit = async () => {
     if (!postContent.trim()) {
@@ -13,16 +26,22 @@ function HomePage() {
       return;
     }
 
+    const selectedExpiration = expirationOptions[expiresAt];
+    const expirationDate =
+      selectedExpiration === null
+        ? null
+        : new Date(Date.now() + selectedExpiration * 1000).toISOString();
+
     try {
       await axios.post('http://localhost:8000/api/', {
         name: postName || 'Untitled', // Если название пустое, использовать "Untitled"
         text: postContent,
-        expires_at: expiresAt || "2023-12-30T14:01:49.746Z", // Если дата не указана, оставить null
+        expires_at: expirationDate, // Преобразовать время истечения в ISO формат
       });
       setResponseMessage('Пост успешно добавлен!');
       setPostName('');
       setPostContent('');
-      setExpiresAt('');
+      setExpiresAt('never');
     } catch (error) {
       setResponseMessage(`Ошибка: ${error.response?.data?.detail || 'Неизвестная ошибка'}`);
     }
@@ -45,12 +64,17 @@ function HomePage() {
         rows="5"
         style={{ width: '100%', marginBottom: '10px', padding: '8px' }}
       />
-      <input
-        type="datetime-local"
+      <select
         value={expiresAt}
         onChange={(e) => setExpiresAt(e.target.value)}
         style={{ width: '100%', marginBottom: '10px', padding: '8px' }}
-      />
+      >
+        {Object.keys(expirationOptions).map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
       <button onClick={handleSubmit} style={{ padding: '10px 20px' }}>
         Добавить
       </button>
