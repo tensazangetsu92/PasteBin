@@ -19,6 +19,4 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 setup_cors(app)
-
-# Подключение маршрутов
 app.include_router(router, prefix="/api", tags=["PasteBin"])

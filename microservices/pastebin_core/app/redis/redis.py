@@ -40,3 +40,14 @@ async def get_and_increment_views(redis: Redis, short_key: str):
 async def cache_post(redis: Redis, short_key: str, post_data: dict, ttl: int = 10):
     """Сохранить пост в кэш."""
     await redis.set(f"popular_post:{short_key}", json.dumps(post_data), ex=ttl)
+
+async def get_popular_posts_keys(redis: Redis, limit: int = 10):
+    keys = await redis.keys("post_views:*")
+    post_views = []
+    for key in keys:
+        views = await redis.get(key)
+        if views:
+            post_views.append((key, int(views)))  # Убираем decode()
+    post_views.sort(key=lambda x: x[1], reverse=True)
+    return [key.split(':')[1] for key, _ in post_views[:limit]]
+
