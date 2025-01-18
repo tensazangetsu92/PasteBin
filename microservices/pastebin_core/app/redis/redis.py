@@ -37,6 +37,13 @@ async def get_and_increment_views(redis: Redis, short_key: str):
         cached_post, views, ttl_set_result  = await pipe.execute()
     return cached_post, views
 
+async def get_post_from_cache(redis: Redis, short_key: str):
+    cached_data = await redis.get(short_key)
+    if cached_data:
+        # Декодируем данные из JSON
+        return json.loads(cached_data)
+    return None
+
 async def cache_post(redis: Redis, short_key: str, post_data: dict, ttl: int = 10):
     """Сохранить пост в кэш."""
     await redis.set(f"popular_post:{short_key}", json.dumps(post_data), ex=ttl)
