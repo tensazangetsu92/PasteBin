@@ -1,5 +1,6 @@
 import json
 import time
+from datetime import datetime
 
 import redis.asyncio as redis
 from redis.asyncio import Redis
@@ -38,14 +39,17 @@ async def get_and_increment_views(redis: Redis, short_key: str):
     return cached_post, views
 
 async def get_post_from_cache(redis: Redis, short_key: str):
-    cached_data = await redis.get(short_key)
+    cached_data = await redis.get(f"popular_post:{short_key}")
     if cached_data:
-        # Декодируем данные из JSON
-        return json.loads(cached_data)
+        post_data = json.loads(cached_data)
+        post_data["created_at"] = datetime.fromisoformat(post_data["created_at"])
+        post_data["expires_at"] = datetime.fromisoformat(post_data["expires_at"])
+        return post_data
     return None
 
 async def cache_post(redis: Redis, short_key: str, post_data: dict, ttl: int = 10):
-    """Сохранить пост в кэш."""
+    post_data["created_at"] = post_data["created_at"].isoformat()
+    post_data["expires_at"] = post_data["expires_at"].isoformat()
     await redis.set(f"popular_post:{short_key}", json.dumps(post_data), ex=ttl)
 
 async def get_popular_posts_keys(redis: Redis, limit: int = 10):
