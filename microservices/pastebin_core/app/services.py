@@ -1,7 +1,7 @@
-import secrets
 from datetime import datetime
 from io import BytesIO
 import json
+import httpx
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from .redis.redis import get_and_increment_views, cache_post, get_popular_posts_keys
@@ -14,9 +14,18 @@ from .yandex_bucket.storage import upload_file_to_bucket
 from .schemas import TextCreate
 
 
-async def generate_short_key(length: int = 8) -> str:
-    """Генерация уникального короткого ключа."""
-    return secrets.token_urlsafe(length)[:length]
+async def get_hash() -> str:
+    """Получение хэша от хэш-сервера через HTTP-запрос."""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(settings.HASH_SERVER_URL)
+            if response.status_code == 200:
+                data = response.json()
+                if "hash" in data:
+                    return data["hash"]
+            raise ValueError("Failed to fetch hash from hash server")
+    except httpx.RequestError as req_err:
+        raise HTTPException(503, f"Failed to fetch hash from hash server: {req_err}")
 
 async def add_post_service(
     text_data: TextCreate,
@@ -25,9 +34,9 @@ async def add_post_service(
 ):
     """Добавление нового поста."""
     file_obj = BytesIO(text_data.text.encode("utf-8"))
-    short_key = await generate_short_key()
+    short_key = await get_hash()
     while await get_text_by_short_key(db, short_key) is not None:
-        short_key = await generate_short_key()
+        short_key = await get_hash()
     blob_url = await upload_file_to_bucket(
         settings.BUCKET_NAME, current_user_id, short_key, file_obj
     )
