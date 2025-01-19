@@ -31,6 +31,10 @@ async def add_post_service(
     blob_url = await upload_file_to_bucket(
         settings.BUCKET_NAME, current_user_id, short_key, file_obj
     )
+    # # Преобразуем expires_at в datetime, если оно в строке ISO
+    # if isinstance(text_data.expires_at, str):
+    #     text_data.expires_at = datetime.fromisoformat(text_data.expires_at)
+
     new_text = await create_text_record(
         session=db,
         object_name=text_data.name,

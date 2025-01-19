@@ -1,5 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from contextlib import asynccontextmanager
+
+from starlette.responses import JSONResponse
+
 from .postgresql.database import create_tables, delete_tables, new_session
 from .redis.redis import connect_to_redis, disconnect_from_redis
 from .scheduler import start_scheduler, terminate_scheduler
@@ -20,3 +23,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 setup_cors(app)
 app.include_router(router, prefix="/api", tags=["PasteBin"])
+
+@app.exception_handler(HTTPException)
+async def validation_exception_handler(request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": str(exc.detail)},
+    )

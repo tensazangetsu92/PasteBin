@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'; // Укажите URL вашего бэкенда
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api'; // Укажите URL вашего бэкенда
 
 export const getTextByShortKey = async (shortKey) => {
   try {

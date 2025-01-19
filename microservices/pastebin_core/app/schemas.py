@@ -1,11 +1,21 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, validator
 from typing import Optional
 from datetime import datetime
 
 class TextCreate(BaseModel):
     name: str = "Untitled"
     text: str = "Some text"
-    expires_at: Optional[datetime] = "2040-12-30T14:01:49.746Z"
+    expires_at: datetime  # Обязательное поле
+
+    @validator('expires_at', pre=True)
+    def parse_expires_at(cls, v):
+        # Если expires_at None, установить значение по умолчанию
+        if v is None:
+            return datetime(2040, 12, 30, 14, 1, 49, 746000)
+        # Если значение в формате ISO, преобразовать в datetime
+        if isinstance(v, str):
+            return datetime.fromisoformat(v)
+        return v  # В случае уже валидного datetime
 
 
 class TextResponse(BaseModel):

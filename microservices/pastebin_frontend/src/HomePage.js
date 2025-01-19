@@ -33,7 +33,7 @@ function HomePage() {
         : new Date(Date.now() + selectedExpiration * 1000).toISOString();
 
     try {
-      await axios.post('http://localhost:8000/api/', {
+      await axios.post('http://localhost:8000/api/add_post', {
         name: postName || 'Untitled', // Если название пустое, использовать "Untitled"
         text: postContent,
         expires_at: expirationDate, // Преобразовать время истечения в ISO формат
@@ -43,7 +43,11 @@ function HomePage() {
       setPostContent('');
       setExpiresAt('never');
     } catch (error) {
-      setResponseMessage(`Ошибка: ${error.response?.data?.detail || 'Неизвестная ошибка'}`);
+      const errorMessage = error.response
+    ? JSON.stringify(error.response.data, null, 2)
+    : 'Неизвестная ошибка';
+  console.error('Ошибка:', errorMessage);
+  setResponseMessage(`Ошибка: ${errorMessage}`);
     }
   };
 
