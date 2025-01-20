@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { getPostByShortKey } from '../api/pastebin'; // Предполагается, что эта функция уже есть
+import { getPostByShortKey } from '../api/pastebin';
 
 function PostPage() {
   const { shortKey } = useParams();
@@ -30,6 +30,7 @@ function PostPage() {
       {post.expires_at && (
         <p><strong>Истекает:</strong> {new Date(post.expires_at).toLocaleString()}</p>
       )}
+      <p><strong>Просмотров:</strong> {post.views}</p> {/* Добавлено количество просмотров */}
       <div style={{ marginTop: '20px', whiteSpace: 'pre-wrap' }}>
         {post.text}
       </div>

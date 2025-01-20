@@ -73,6 +73,7 @@ async def get_text_service(
         "short_key": short_key,
         "created_at": text_record.created_at,
         "expires_at": text_record.expires_at,
+        "views" : views,
     }
     if views >= settings.CACHE_VIEWS_THRESHOLD:
         await cache_post(redis, short_key, response, settings.TTL_POSTS)
