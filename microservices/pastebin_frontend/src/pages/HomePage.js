@@ -1,6 +1,7 @@
 // src/components/HomePage.js
 import React, { useState, useEffect } from 'react';
-import { addPost, getPopularPosts } from './api/pastebin'; // Импортируем функции
+import { addPost, getPopularPosts } from '../api/pastebin'; // Импортируем функции
+import { Link } from 'react-router-dom';
 
 function HomePage() {
   const [postName, setPostName] = useState('');
@@ -101,9 +102,13 @@ function HomePage() {
         <ul>
           {popularPosts.map((post, index) => (
             <li key={index}>
-              <strong>{post.name}</strong> - {post.creation_date}
+              <Link to={`/${post.short_key}`}>
+                <strong>{post.name}</strong>
+              </Link>
               <br />
               Размер текста: {post.text_size_kilobytes} KB
+              <br />
+              Создан: {new Date(post.created_at).toLocaleString()}
             </li>
           ))}
         </ul>

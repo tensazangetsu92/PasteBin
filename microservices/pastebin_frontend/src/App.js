@@ -1,11 +1,16 @@
 import React from 'react';
-import HomePage from './HomePage';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage'; // Указан новый путь
+import PostPage from './pages/PostPage'; // Путь к компоненту PostPage
 
 function App() {
   return (
-    <div>
-      <HomePage />
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/:shortKey" element={<PostPage />} />
+      </Routes>
+    </Router>
   );
 }
 
