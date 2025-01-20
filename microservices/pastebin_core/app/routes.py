@@ -7,7 +7,7 @@ from .services import (
     get_text_service,
     get_popular_posts_service,
 )
-from .schemas import TextCreate
+from .schemas import TextCreate, PopularPostsResponse
 
 router = APIRouter()
 
@@ -34,6 +34,20 @@ async def add_post(
     except Exception as e:
         raise e
 
+
+@router.post("/get_popular_posts")
+async def get_popular_posts(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
+    try:
+        response = await get_popular_posts_service(request, session)
+        return response
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=f"Error: {e}")
+
+
 @router.get("/{short_key}")
 async def get_text(
     request: Request,
@@ -45,15 +59,3 @@ async def get_text(
         return response
     except HTTPException as e:
         raise e
-
-@router.post("/get_popular_posts")
-async def get_popular_posts(
-    request: Request,
-    session: AsyncSession = Depends(get_session),
-):
-    print("awds")
-    try:
-        response = await get_popular_posts_service(request, session)
-        return response
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error: {e}")

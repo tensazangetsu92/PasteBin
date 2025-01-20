@@ -99,7 +99,7 @@ function HomePage() {
       {popularPosts.length === 0 ? (
         <p>Загрузка популярных постов...</p>
       ) : (
-        <ul>
+         <ul>
           {popularPosts.map((post, index) => (
             <li key={index}>
               <Link to={`/${post.short_key}`}>
@@ -108,7 +108,7 @@ function HomePage() {
               <br />
               Размер текста: {post.text_size_kilobytes} KB
               <br />
-              Создан: {new Date(post.created_at).toLocaleString()}
+              Создан: {post.creation_date}
             </li>
           ))}
         </ul>

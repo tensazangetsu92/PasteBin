@@ -1,5 +1,5 @@
 from pydantic import BaseModel, HttpUrl, validator
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 class TextCreate(BaseModel):
@@ -20,11 +20,15 @@ class TextCreate(BaseModel):
 
 
 class TextResponse(BaseModel):
-    id: int
-    blob_url: HttpUrl
+    name: str
+    text_size_kilobytes: int
     short_key: str
-    created_at: datetime
-    expires_at: Optional[datetime]
+    created_at: str
+    expires_at: str
 
     class Config:
-        from_attributes = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat(timespec='milliseconds')
+        }
+class PopularPostsResponse(BaseModel):
+    posts: List[TextResponse]

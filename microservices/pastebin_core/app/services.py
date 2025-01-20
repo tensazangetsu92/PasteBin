@@ -94,4 +94,5 @@ async def get_popular_posts_service(request, session: AsyncSession):
             "creation_date": creation_time,
             "expires_at": text_record.expires_at,
         })
+    print(response)
     return response
