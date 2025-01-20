@@ -5,7 +5,7 @@ from datetime import datetime
 class TextCreate(BaseModel):
     name: str = "Untitled"
     text: str = "Some text"
-    expires_at: datetime  # Обязательное поле
+    expires_at: datetime
 
     @validator('expires_at', pre=True)
     def parse_expires_at(cls, v):
@@ -14,6 +14,7 @@ class TextCreate(BaseModel):
             return datetime(2040, 12, 30, 14, 1, 49, 746000)
         # Если значение в формате ISO, преобразовать в datetime
         if isinstance(v, str):
+            v = v.replace("Z", "+00:00")
             return datetime.fromisoformat(v)
         return v  # В случае уже валидного datetime
 

@@ -1,23 +1,23 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api'; // Укажите URL вашего бэкенда
+const API_URL = 'http://localhost:8000/api'; // Адрес вашего API
 
-export const getTextByShortKey = async (shortKey) => {
+// Функция для добавления нового поста
+export const addPost = async (postData) => {
   try {
-    const response = await axios.get(`${API_URL}/${shortKey}`);
+    const response = await axios.post(`${API_URL}/add_post`, postData);
     return response.data;
   } catch (error) {
-    console.error('Error fetching text:', error);
-    throw error;
+    throw new Error(error.response?.data?.detail || 'Неизвестная ошибка');
   }
 };
 
-export const createText = async (textData) => {
+// Функция для получения популярных постов
+export const getPopularPosts = async () => {
   try {
-    const response = await axios.post(`${API_URL}/`, textData);
+    const response = await axios.post(`${API_URL}/get_popular_posts`);
     return response.data;
   } catch (error) {
-    console.error('Error creating text:', error);
-    throw error;
+    throw new Error(error.response?.data?.detail || 'Неизвестная ошибка');
   }
 };

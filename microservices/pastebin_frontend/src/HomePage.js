@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+// src/components/HomePage.js
+import React, { useState, useEffect } from 'react';
+import { addPost, getPopularPosts } from './api/pastebin'; // Импортируем функции
 
 function HomePage() {
-  const [postName, setPostName] = useState(''); // Для названия поста
-  const [postContent, setPostContent] = useState(''); // Для текста поста
-  const [expiresAt, setExpiresAt] = useState('never'); // Для времени истечения
+  const [postName, setPostName] = useState('');
+  const [postContent, setPostContent] = useState('');
+  const [expiresAt, setExpiresAt] = useState('never');
   const [responseMessage, setResponseMessage] = useState('');
+  const [popularPosts, setPopularPosts] = useState([]); // Для популярных постов
 
   const expirationOptions = {
     never: null,
@@ -20,6 +22,18 @@ function HomePage() {
     '1 year': 365 * 24 * 60 * 60,
   };
 
+  useEffect(() => {
+    const fetchPopularPosts = async () => {
+      try {
+        const posts = await getPopularPosts();
+        setPopularPosts(posts);
+      } catch (error) {
+        setResponseMessage(`Ошибка при получении популярных постов: ${error.message}`);
+      }
+    };
+    fetchPopularPosts();
+  }, []); // Вызываем один раз при монтировании компонента
+
   const handleSubmit = async () => {
     if (!postContent.trim()) {
       setResponseMessage('Пост не может быть пустым.');
@@ -33,21 +47,17 @@ function HomePage() {
         : new Date(Date.now() + selectedExpiration * 1000).toISOString();
 
     try {
-      await axios.post('http://localhost:8000/api/add_post', {
-        name: postName || 'Untitled', // Если название пустое, использовать "Untitled"
+      await addPost({
+        name: postName || 'Untitled',
         text: postContent,
-        expires_at: expirationDate, // Преобразовать время истечения в ISO формат
+        expires_at: expirationDate,
       });
       setResponseMessage('Пост успешно добавлен!');
       setPostName('');
       setPostContent('');
       setExpiresAt('never');
     } catch (error) {
-      const errorMessage = error.response
-    ? JSON.stringify(error.response.data, null, 2)
-    : 'Неизвестная ошибка';
-  console.error('Ошибка:', errorMessage);
-  setResponseMessage(`Ошибка: ${errorMessage}`);
+      setResponseMessage(`Ошибка: ${error.message}`);
     }
   };
 
@@ -83,6 +93,21 @@ function HomePage() {
         Добавить
       </button>
       {responseMessage && <p>{responseMessage}</p>}
+
+      <h2>Популярные посты</h2>
+      {popularPosts.length === 0 ? (
+        <p>Загрузка популярных постов...</p>
+      ) : (
+        <ul>
+          {popularPosts.map((post, index) => (
+            <li key={index}>
+              <strong>{post.name}</strong> - {post.creation_date}
+              <br />
+              Размер текста: {post.text_size_kilobytes} KB
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

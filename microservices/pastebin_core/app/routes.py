@@ -32,7 +32,7 @@ async def add_post(
         )
         return RedirectResponse(url=f"/api/{new_text.short_key}", status_code=303)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error: {e}")
+        raise e
 
 @router.get("/{short_key}")
 async def get_text(
@@ -46,11 +46,12 @@ async def get_text(
     except HTTPException as e:
         raise e
 
-@router.post("/popular")
+@router.post("/get_popular_posts")
 async def get_popular_posts(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ):
+    print("awds")
     try:
         response = await get_popular_posts_service(request, session)
         return response
