@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from microservices.pastebin_core.app.postgresql.models import TextUrlOrm
+from microservices.pastebin_core.app.postgresql.models import TextUrlOrm, UserOrm
 from microservices.pastebin_core.app.yandex_bucket.storage import delete_file_from_bucket
 
 
@@ -66,3 +66,8 @@ async def delete_expired_records(session: AsyncSession):
         print("Устаревшие записи удалены")
     except Exception as e:
         print(f"Ошибка при удалении устаревших записей: {e}")
+
+
+async def get_user_by_username(session: AsyncSession, username: str):
+    db_user = await session.execute(select(UserOrm).where(UserOrm.username == username))
+    return db_user.scalar_one_or_none()

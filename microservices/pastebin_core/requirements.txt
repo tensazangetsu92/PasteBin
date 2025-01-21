@@ -11,3 +11,4 @@ greenlet
 apscheduler
 redis
 httpx
+passlib

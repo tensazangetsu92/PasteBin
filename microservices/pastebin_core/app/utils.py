@@ -10,6 +10,7 @@ def convert_to_kilobytes(bytes: int):
     return round(bytes / 1024, 2)
 
 def get_post_age(created_at: datetime):
+    """Получить сколько секунд/минут/часов/дней назад был создан пост"""
     time_difference = datetime.utcnow() - created_at
     if time_difference.days > 0:
         creation_time = f"{time_difference.days} дней назад"

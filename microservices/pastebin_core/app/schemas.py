@@ -1,8 +1,8 @@
-from pydantic import BaseModel, HttpUrl, validator
+from pydantic import BaseModel, HttpUrl, validator, EmailStr
 from typing import Optional, List
 from datetime import datetime
 
-class TextCreate(BaseModel):
+class PostCreate(BaseModel):
     name: str = "Untitled"
     text: str = "Some text"
     expires_at: datetime
@@ -18,8 +18,7 @@ class TextCreate(BaseModel):
             return datetime.fromisoformat(v)
         return v  # В случае уже валидного datetime
 
-
-class TextResponse(BaseModel):
+class PostResponse(BaseModel):
     name: str
     text_size_kilobytes: int
     short_key: str
@@ -31,4 +30,20 @@ class TextResponse(BaseModel):
             datetime: lambda v: v.isoformat(timespec='milliseconds')
         }
 class PopularPostsResponse(BaseModel):
-    posts: List[TextResponse]
+    posts: List[PostResponse]
+
+
+
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: EmailStr
+    is_active: bool
+
+    class Config:
+        from_attributes = True

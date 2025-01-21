@@ -7,7 +7,7 @@ from .services import (
     get_text_service,
     get_popular_posts_service,
 )
-from .schemas import TextCreate, PopularPostsResponse
+from .schemas import PostCreate, PopularPostsResponse, UserResponse, UserCreate
 
 router = APIRouter()
 
@@ -20,7 +20,7 @@ async def get_current_user_id() -> int:
 
 @router.post("/add_post")
 async def add_post(
-    text_data: TextCreate,
+    text_data: PostCreate,
     db: AsyncSession = Depends(get_session),
     current_user_id: int = Depends(get_current_user_id),
 ):
@@ -34,8 +34,7 @@ async def add_post(
     except Exception as e:
         raise e
 
-
-@router.post("/get_popular_posts")
+@router.post("/get_popular_posts", response_model=PopularPostsResponse)
 async def get_popular_posts(
     request: Request,
     session: AsyncSession = Depends(get_session),
@@ -47,7 +46,6 @@ async def get_popular_posts(
         print(e)
         raise HTTPException(status_code=500, detail=f"Error: {e}")
 
-
 @router.get("/{short_key}")
 async def get_text(
     request: Request,
@@ -56,6 +54,18 @@ async def get_text(
 ):
     try:
         response = await get_text_service(request, short_key, session)
+        return response
+    except HTTPException as e:
+        raise e
+
+
+@router.post("/register", response_model=UserResponse)
+async def register_user_service(
+        user: UserCreate,
+        session: AsyncSession = Depends(get_session)
+):
+    try:
+        response = await register_user_service(user, session)
         return response
     except HTTPException as e:
         raise e
