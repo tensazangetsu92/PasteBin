@@ -5,3 +5,5 @@ asyncpg
 pydantic
 alembic
 passlib
+pydantic[email]
+python-jose

@@ -3,10 +3,8 @@ import json
 import httpx
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from .password_utils import hash_password
-from .postgresql.models import UserOrm
 from .redis.redis import get_and_increment_views, cache_post, get_popular_posts_keys
-from .postgresql.crud import get_text_by_short_key, get_user_by_username
+from .postgresql.crud import get_text_by_short_key
 from .yandex_bucket.storage import get_file_from_bucket
 from .utils import convert_to_kilobytes, get_post_age
 from .config import settings
@@ -99,17 +97,3 @@ async def get_popular_posts_service(request, session: AsyncSession):
     return response
 
 
-async def register_user_service(user: UserCreate, session: AsyncSession) -> UserOrm:
-    hashed_password = hash_password(user.password)
-    new_user = UserOrm(username=user.username, hashed_password=hashed_password)
-    session.add(new_user)
-    await session.commit()
-    await session.refresh(new_user)
-    return new_user
-
-async def login_user_service(user: UserCreate, session: AsyncSession) -> str:
-    db_user = await get_user_by_username(session, user)
-    if not db_user or not pwd_context.verify(user.password, db_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Invalid credentials")
-    # Здесь нужно сгенерировать реальный JWT-токен
-    return "fake_token"

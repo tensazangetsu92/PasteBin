@@ -1,4 +1,4 @@
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase
 from microservices.pastebin_core.app.config import settings
 
@@ -9,6 +9,10 @@ engine = create_async_engine(
 )
 
 new_session = async_sessionmaker(engine, expire_on_commit=False)
+
+async def get_session() -> AsyncSession:
+    async with new_session() as session:
+        yield session
 
 async def create_tables():
     async with engine.begin() as conn:

@@ -1,19 +1,24 @@
-# routes.py
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from .postgresql.crud import get_user_by_email
+from .postgresql.database import get_session
+from .postgresql.models import UserOrm
 from .schemas import UserCreate, UserResponse
-from .services import create_user, authenticate_user
+from .services import create_user, authenticate_user, register_user_service
 from sqlalchemy.ext.asyncio import AsyncSession
-from postgresql.database import new_session
+from .password_utils import hash_password
 
 router = APIRouter()
 
-async def get_session() -> AsyncSession:
-    async with new_session() as session:
-        yield session
+
+
 
 @router.post("/register", response_model=UserResponse)
-async def register(user: UserCreate, session: AsyncSession = Depends(get_session)):
-    return await create_user(user, session)
+async def register_user(user: UserCreate, session: AsyncSession = Depends(get_session)):
+    try:
+        response = register_user_service(user, session)
+        return response
+    except Exception as e:
+        return e
 
 @router.post("/login")
 async def login(user: UserCreate, session: AsyncSession = Depends(get_session)):
