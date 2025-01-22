@@ -14,3 +14,12 @@ class UserResponse(BaseModel):
 
     class Config:
         orm_mode = True  # Это позволяет использовать Pydantic с SQLAlchemy моделями
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
