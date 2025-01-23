@@ -13,7 +13,7 @@ class UserResponse(BaseModel):
     email: EmailStr
 
     class Config:
-        orm_mode = True  # Это позволяет использовать Pydantic с SQLAlchemy моделями
+        from_attributes = True
 
 
 class UserLogin(BaseModel):

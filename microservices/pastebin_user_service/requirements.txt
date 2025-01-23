@@ -1,9 +1,0 @@
-fastapi
-uvicorn
-sqlalchemy
-asyncpg
-pydantic
-alembic
-passlib
-pydantic[email]
-python-jose

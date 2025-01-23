@@ -1,24 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import RedirectResponse
-from .postgresql.database import new_session
+from .postgresql.database import new_session, get_session
 from .services import (
     add_post_service,
     get_text_service,
     get_popular_posts_service,
 )
-from .schemas import PostCreate, PopularPostsResponse, UserResponse, UserCreate
+from .schemas import PostCreate, PopularPostsResponse
 
-router = APIRouter()
+PostsRouter = APIRouter()
 
-async def get_session() -> AsyncSession:
-    async with new_session() as session:
-        yield session
+
 
 async def get_current_user_id() -> int:
     return 3  # Здесь подключите JWT или другой метод авторизации
 
-@router.post("/add_post")
+@PostsRouter.post("/add_post")
 async def add_post(
     text_data: PostCreate,
     db: AsyncSession = Depends(get_session),
@@ -34,7 +32,7 @@ async def add_post(
     except Exception as e:
         raise e
 
-@router.post("/get_popular_posts", response_model=PopularPostsResponse)
+@PostsRouter.post("/get_popular_posts", response_model=PopularPostsResponse)
 async def get_popular_posts(
     request: Request,
     session: AsyncSession = Depends(get_session),
@@ -46,7 +44,7 @@ async def get_popular_posts(
         print(e)
         raise HTTPException(status_code=500, detail=f"Error: {e}")
 
-@router.get("/{short_key}")
+@PostsRouter.get("/{short_key}")
 async def get_text(
     request: Request,
     short_key: str,
@@ -58,14 +56,3 @@ async def get_text(
     except HTTPException as e:
         raise e
 
-
-@router.post("/register", response_model=UserResponse)
-async def register_user_service(
-        user: UserCreate,
-        session: AsyncSession = Depends(get_session)
-):
-    try:
-        response = await register_user_service(user, session)
-        return response
-    except HTTPException as e:
-        raise e

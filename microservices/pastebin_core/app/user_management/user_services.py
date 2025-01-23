@@ -1,17 +1,14 @@
-# services.py
-from passlib.context import CryptContext
+# user_services.py
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 from fastapi import HTTPException
 
-from .password_utils import hash_password, verify_password
-from .postgresql.crud import get_user_by_email, create_user, get_user_by_username
-from .postgresql.models import UserOrm
-from .schemas import UserCreate, UserResponse
-from .token_utils import create_access_token
+from microservices.pastebin_core.app.postgresql.crud import get_user_by_email, create_user, get_user_by_username
+from microservices.pastebin_core.app.user_management.password_utils import hash_password, verify_password
+
+from microservices.pastebin_core.app.user_management.token_utils import create_access_token
+from microservices.pastebin_core.app.user_management.user_schemas import UserCreate, UserResponse
 
 
-#
 # async def authenticate_user(username: str, password: str, session: AsyncSession):
 #     stmt = select(UserOrm).filter(UserOrm.username == username)
 #     result = await session.execute(stmt)

@@ -1,6 +1,6 @@
 from jose import jwt
 from datetime import datetime, timedelta
-from microservices.pastebin_user_service.app.config import settings
+from microservices.pastebin_core.app.config import settings
 
 
 def create_access_token(data: dict):

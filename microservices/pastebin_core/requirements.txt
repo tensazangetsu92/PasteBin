@@ -11,3 +11,6 @@ greenlet
 apscheduler
 redis
 httpx
+passlib
+pydantic[email]
+python-jose

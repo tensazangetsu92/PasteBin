@@ -1,13 +1,13 @@
 from fastapi import FastAPI, HTTPException
 from contextlib import asynccontextmanager
-
 from starlette.responses import JSONResponse
-
 from .postgresql.database import create_tables, delete_tables, new_session
 from .redis.redis import connect_to_redis, disconnect_from_redis
 from .scheduler import start_scheduler, terminate_scheduler
 from .middlewares import setup_cors
-from .routes import router  # Импорт маршрутов
+from .routes import PostsRouter
+from .user_management.user_routes import UsersRouter
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -22,7 +22,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 setup_cors(app)
-app.include_router(router, prefix="/api", tags=["PasteBin"])
+app.include_router(PostsRouter, prefix="/api", tags=["PasteBin"])
+app.include_router(UsersRouter, prefix="/api/users", tags=["users"])
 
 @app.exception_handler(HTTPException)
 async def validation_exception_handler(request, exc: HTTPException):

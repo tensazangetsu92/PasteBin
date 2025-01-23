@@ -4,13 +4,13 @@ import httpx
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from .redis.redis import get_and_increment_views, cache_post, get_popular_posts_keys
-from .postgresql.crud import get_text_by_short_key
+from .postgresql.crud import get_post_by_short_key
 from .yandex_bucket.storage import get_file_from_bucket
 from .utils import convert_to_kilobytes, get_post_age
 from .config import settings
-from .postgresql.crud import create_text_record
+from .postgresql.crud import create_post_record
 from .yandex_bucket.storage import upload_file_to_bucket
-from .schemas import PostCreate, UserCreate
+from .schemas import PostCreate
 
 
 async def get_hash() -> str:
@@ -34,12 +34,12 @@ async def add_post_service(
     """Добавление нового поста."""
     file_obj = BytesIO(text_data.text.encode("utf-8"))
     short_key = await get_hash()
-    while await get_text_by_short_key(db, short_key) is not None:
+    while await get_post_by_short_key(db, short_key) is not None:
         short_key = await get_hash()
     blob_url = await upload_file_to_bucket(
         settings.BUCKET_NAME, current_user_id, short_key, file_obj
     )
-    new_text = await create_text_record(
+    new_text = await create_post_record(
         session=db,
         object_name=text_data.name,
         blob_url=blob_url,
@@ -58,7 +58,7 @@ async def get_text_service(
     cached_post, views = await get_and_increment_views(redis, short_key)
     if cached_post:
         return json.loads(cached_post)
-    text_record = await get_text_by_short_key(session, short_key)
+    text_record = await get_post_by_short_key(session, short_key)
     if not text_record:
         raise HTTPException(status_code=404, detail="Text not found")
     try:
@@ -84,7 +84,7 @@ async def get_popular_posts_service(request, session: AsyncSession):
     keys = await get_popular_posts_keys(redis)
     response = []
     for short_key in keys:
-        text_record = await get_text_by_short_key(session, short_key)
+        text_record = await get_post_by_short_key(session, short_key)
         file_data = await get_file_from_bucket(text_record.blob_url)
         creation_time = get_post_age(text_record.created_at)
         response.append({
