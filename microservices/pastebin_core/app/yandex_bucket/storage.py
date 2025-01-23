@@ -8,8 +8,8 @@ from microservices.pastebin_core.app.utils import parse_blob_url
 s3_client = boto3.client(
     service_name="s3",
     endpoint_url="https://storage.yandexcloud.net",
-    aws_access_key_id=settings.ACCESS_KEY,
-    aws_secret_access_key=settings.SECRET_KEY,
+    aws_access_key_id=settings.BUCKET_ACCESS_KEY,
+    aws_secret_access_key=settings.BUCKET_SECRET_KEY,
 )
 
 async def upload_file_to_bucket(bucket_name: str, author_id: int, short_key: str, file_obj: BinaryIO):

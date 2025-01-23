@@ -14,3 +14,4 @@ httpx
 passlib
 pydantic[email]
 python-jose
+bcrypt

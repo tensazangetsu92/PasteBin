@@ -11,8 +11,8 @@ class Settings(BaseSettings):
 
     # Переменные для Yandex Object Storage
     BUCKET_NAME: str
-    ACCESS_KEY: str
-    SECRET_KEY: str
+    BUCKET_ACCESS_KEY: str
+    BUCKET_SECRET_KEY: str
 
     # Переменные для базы данных Redis
     DB_REDIS_HOST: str

@@ -14,7 +14,7 @@ PostsRouter = APIRouter()
 
 
 async def get_current_user_id() -> int:
-    return 3  # Здесь подключите JWT или другой метод авторизации
+    return 1  # Здесь подключите JWT или другой метод авторизации
 
 @PostsRouter.post("/add_post")
 async def add_post(

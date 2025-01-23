@@ -11,7 +11,7 @@ UsersRouter = APIRouter()
 @UsersRouter.post("/register", response_model=UserResponse)
 async def register_user(user: UserCreate, session: AsyncSession = Depends(get_session)):
     try:
-        response = register_user_service(user, session)
+        response = await register_user_service(user, session)
         return response
     except Exception as e:
         return e
