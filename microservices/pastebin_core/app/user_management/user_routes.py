@@ -30,4 +30,5 @@ async def login(user: UserCreate, session: AsyncSession = Depends(get_session)):
         )
         return response
     except Exception as e:
+        print(e)
         return e

@@ -32,7 +32,7 @@ async def register_user_service(user: UserCreate, session: AsyncSession) -> User
 
 
 async def login_user_service(user: UserCreate, session: AsyncSession):
-    db_user = await get_user_by_username(user.username, session)
+    db_user = await get_user_by_username(session, user.username)
     if not db_user or not verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=400, detail="Неверный логин или пароль")
 
