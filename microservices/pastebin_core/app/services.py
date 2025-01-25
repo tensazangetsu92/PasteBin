@@ -82,18 +82,18 @@ async def get_popular_posts_service(request, session: AsyncSession):
     """Получение популярных постов."""
     redis = request.app.state.redis
     keys = await get_popular_posts_keys(redis)
-    response = []
+    posts = []
     for short_key in keys:
         text_record = await get_post_by_short_key(session, short_key)
         file_data = await get_file_from_bucket(text_record.blob_url)
         creation_time = get_post_age(text_record.created_at)
-        response.append({
+        posts.append({
             "name": text_record.name,
             "text_size_kilobytes": convert_to_kilobytes(file_data["size"]),
             "short_key": short_key,
-            "creation_date": creation_time,
+            "created_at": creation_time,
             "expires_at": text_record.expires_at,
         })
-    return response
+    return {"posts": posts}
 
 

@@ -30,7 +30,8 @@ async def add_post(
         )
         return RedirectResponse(url=f"/api/{new_text.short_key}", status_code=303)
     except Exception as e:
-        raise e
+        print(e)
+        raise HTTPException(status_code=500, detail=f"Error: {e}")
 
 @PostsRouter.post("/get_popular_posts", response_model=PopularPostsResponse)
 async def get_popular_posts(
@@ -39,6 +40,8 @@ async def get_popular_posts(
 ):
     try:
         response = await get_popular_posts_service(request, session)
+        print("ASD")
+        print(response)
         return response
     except Exception as e:
         print(e)
@@ -54,5 +57,6 @@ async def get_text(
         response = await get_text_service(request, short_key, session)
         return response
     except HTTPException as e:
-        raise e
+        print(e)
+        raise HTTPException(status_code=500, detail=f"Error: {e}")
 

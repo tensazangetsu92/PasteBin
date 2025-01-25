@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 setup_cors(app)
 app.include_router(PostsRouter, prefix="/api", tags=["PasteBin"])
-app.include_router(UsersRouter, prefix="/api/users", tags=["users"])
+app.include_router(UsersRouter, prefix="/api", tags=["registration and login"])
 
 @app.exception_handler(HTTPException)
 async def validation_exception_handler(request, exc: HTTPException):

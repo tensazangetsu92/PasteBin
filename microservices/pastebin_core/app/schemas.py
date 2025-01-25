@@ -20,10 +20,10 @@ class PostCreate(BaseModel):
 
 class PostResponse(BaseModel):
     name: str
-    text_size_kilobytes: int
+    text_size_kilobytes: float
     short_key: str
     created_at: str
-    expires_at: str
+    expires_at: datetime
 
     class Config:
         json_encoders = {

@@ -96,23 +96,27 @@ function HomePage() {
       {responseMessage && <p>{responseMessage}</p>}
 
       <h2>Популярные посты</h2>
-      {popularPosts.length === 0 ? (
-        <p>Загрузка популярных постов...</p>
-      ) : (
-         <ul>
-          {popularPosts.map((post, index) => (
-            <li key={index}>
-              <Link to={`/${post.short_key}`}>
-                <strong>{post.name}</strong>
-              </Link>
-              <br />
-              Размер текста: {post.text_size_kilobytes} KB
-              <br />
-              Создан: {post.creation_date}
-            </li>
-          ))}
-        </ul>
-      )}
+{popularPosts && popularPosts.posts ? (
+  popularPosts.posts.length === 0 ? (
+    <p>Загрузка популярных постов...</p>
+  ) : (
+    <ul>
+      {popularPosts.posts.map((post, index) => (
+        <li key={index}>
+          <Link to={`/${post.short_key}`}>
+            <strong>{post.name}</strong>
+          </Link>
+          <br />
+          Размер текста: {post.text_size_kilobytes} KB
+          <br />
+          Создан: {post.created_at}  {/* Исправлено на created_at */}
+        </li>
+      ))}
+    </ul>
+  )
+) : (
+  <p>Загрузка популярных постов...</p>
+)}
     </div>
   );
 }
