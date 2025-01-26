@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { getPostByShortKey } from '../api/pastebin';
+import { getPostByShortKey } from '../api/posts';
 
 function PostPage() {
   const { shortKey } = useParams();

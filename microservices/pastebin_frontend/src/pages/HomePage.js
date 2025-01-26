@@ -1,6 +1,6 @@
 // src/components/HomePage.js
 import React, { useState, useEffect } from 'react';
-import { addPost, getPopularPosts } from '../api/pastebin'; // Импортируем функции
+import { addPost, getPopularPosts } from '../api/posts'; // Импортируем функции
 import { Link } from 'react-router-dom';
 
 function HomePage() {
