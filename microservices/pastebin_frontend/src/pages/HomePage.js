@@ -1,14 +1,14 @@
-// src/components/HomePage.js
 import React, { useState, useEffect } from 'react';
-import { addPost, getPopularPosts } from '../api/posts'; // Импортируем функции
-import { Link } from 'react-router-dom';
+import { addPost, getPopularPosts } from '../api/posts';
+import { Link, useNavigate } from 'react-router-dom';
 
 function HomePage() {
   const [postName, setPostName] = useState('');
   const [postContent, setPostContent] = useState('');
   const [expiresAt, setExpiresAt] = useState('never');
   const [responseMessage, setResponseMessage] = useState('');
-  const [popularPosts, setPopularPosts] = useState([]); // Для популярных постов
+  const [popularPosts, setPopularPosts] = useState([]);
+  const navigate = useNavigate();
 
   const expirationOptions = {
     never: null,
@@ -33,7 +33,7 @@ function HomePage() {
       }
     };
     fetchPopularPosts();
-  }, []); // Вызываем один раз при монтировании компонента
+  }, []);
 
   const handleSubmit = async () => {
     if (!postContent.trim()) {
@@ -64,59 +64,89 @@ function HomePage() {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1>Добавить новый пост</h1>
-      <input
-        type="text"
-        placeholder="Введите название поста..."
-        value={postName}
-        onChange={(e) => setPostName(e.target.value)}
-        style={{ width: '100%', marginBottom: '10px', padding: '8px' }}
-      />
-      <textarea
-        placeholder="Введите текст поста..."
-        value={postContent}
-        onChange={(e) => setPostContent(e.target.value)}
-        rows="5"
-        style={{ width: '100%', marginBottom: '10px', padding: '8px' }}
-      />
-      <select
-        value={expiresAt}
-        onChange={(e) => setExpiresAt(e.target.value)}
-        style={{ width: '100%', marginBottom: '10px', padding: '8px' }}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px',
+          padding: '10px 20px',
+          backgroundColor: '#f5f5f5',
+          borderRadius: '8px',
+        }}
       >
-        {Object.keys(expirationOptions).map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-      <button onClick={handleSubmit} style={{ padding: '10px 20px' }}>
-        Добавить
-      </button>
-      {responseMessage && <p>{responseMessage}</p>}
+        <h1 style={{ margin: 0 }}>PasteBin</h1>
+        <div>
+          <button
+            onClick={() => navigate('/login')}
+            style={{ marginRight: '10px', padding: '8px 16px' }}
+          >
+            Логин
+          </button>
+          <button onClick={() => navigate('/register')} style={{ padding: '8px 16px' }}>
+            Регистрация
+          </button>
+        </div>
+      </div>
 
-      <h2>Популярные посты</h2>
-{popularPosts && popularPosts.posts ? (
-  popularPosts.posts.length === 0 ? (
-    <p>Загрузка популярных постов...</p>
-  ) : (
-    <ul>
-      {popularPosts.posts.map((post, index) => (
-        <li key={index}>
-          <Link to={`/${post.short_key}`}>
-            <strong>{post.name}</strong>
-          </Link>
-          <br />
-          Размер текста: {post.text_size_kilobytes} KB
-          <br />
-          Создан: {post.created_at}  {/* Исправлено на created_at */}
-        </li>
-      ))}
-    </ul>
-  )
-) : (
-  <p>Загрузка популярных постов...</p>
-)}
+      <div style={{ display: 'flex' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', margin: '20px' }}>
+          <textarea
+            placeholder="Введите текст поста..."
+            value={postContent}
+            onChange={(e) => setPostContent(e.target.value)}
+            rows="5"
+            style={{ width: '1000px', height: '240px', marginBottom: '10px', padding: '8px' }}
+          />
+          <input
+            type="text"
+            placeholder="Введите название поста..."
+            value={postName}
+            onChange={(e) => setPostName(e.target.value)}
+            style={{ width: '200px', marginBottom: '10px', padding: '8px' }}
+          />
+          <select
+            value={expiresAt}
+            onChange={(e) => setExpiresAt(e.target.value)}
+            style={{ width: '200px', marginBottom: '10px', padding: '8px' }}
+          >
+            {Object.keys(expirationOptions).map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+          <button onClick={handleSubmit} style={{ padding: '10px 20px' }}>
+            Добавить
+          </button>
+        </div>
+
+
+        <div style={{ flex: 1, margin: '20px',padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+          <h2>Популярные посты</h2>
+          {popularPosts && popularPosts.posts ? (
+            popularPosts.posts.length === 0 ? (
+              <p>Загрузка популярных постов...</p>
+            ) : (
+              <ul>
+                {popularPosts.posts.map((post, index) => (
+                  <li key={index} style={{ marginBottom: '10px' }}>
+                    <Link to={`/${post.short_key}`}>
+                      <strong>{post.name}</strong>
+                    </Link>
+                    <br />
+                    Размер текста: {post.text_size_kilobytes} KB
+                    <br />
+                    Создан: {post.created_at}
+                  </li>
+                ))}
+              </ul>
+            )
+          ) : (
+            <p>Загрузка популярных постов...</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
