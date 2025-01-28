@@ -67,7 +67,9 @@ async def delete_expired_records(session: AsyncSession):
         print(f"Ошибка при удалении устаревших записей: {e}")
 
 
-
+async def get_user_by_id(session: AsyncSession, user_id: int):
+    result = await session.execute(select(UserOrm).where(UserOrm.id == user_id))
+    return result.scalar_one_or_none()
 
 async def get_user_by_username(session: AsyncSession, username: str):
     db_user = await session.execute(select(UserOrm).where(UserOrm.username == username))

@@ -2,28 +2,42 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:8000/api'; // Адрес вашего API
 
+const apiClient = axios.create({
+  baseURL: API_URL,
+});
+
+// Интерсептор для добавления токена
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
 
 export const getPostByShortKey = async (shortKey) => {
   try {
-    const response = await axios.get(`${API_URL}/${shortKey}`);
+    const response = await apiClient.get(`get-post/${shortKey}`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.detail || 'Не удалось получить пост');
   }
 };
-// Функция для добавления нового поста
+
 export const addPost = async (postData) => {
   try {
-    const response = await axios.post(`${API_URL}/add_post`, postData);
+    const response = await apiClient.post(`/add-post`, postData);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.detail || 'Неизвестная ошибка');
   }
 };
-// Функция для получения популярных постов
+
 export const getPopularPosts = async () => {
   try {
-    const response = await axios.post(`${API_URL}/get_popular_posts`);
+    const response = await apiClient.post(`/get-popular-posts`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.detail || 'Неизвестная ошибка');

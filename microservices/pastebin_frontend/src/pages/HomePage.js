@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { addPost, getPopularPosts } from '../api/posts';
+import { getCurrentUser } from '../api/auth';
 import { Link, useNavigate } from 'react-router-dom';
 
 function HomePage() {
@@ -8,6 +9,7 @@ function HomePage() {
   const [expiresAt, setExpiresAt] = useState('never');
   const [responseMessage, setResponseMessage] = useState('');
   const [popularPosts, setPopularPosts] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
 
   const expirationOptions = {
@@ -32,10 +34,26 @@ function HomePage() {
         setResponseMessage(`Ошибка при получении популярных постов: ${error.message}`);
       }
     };
+
+    const fetchCurrentUser = async () => {
+      try {
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+      } catch (error) {
+        setCurrentUser(null);
+      }
+    };
+
     fetchPopularPosts();
+    fetchCurrentUser();
   }, []);
 
   const handleSubmit = async () => {
+    if (!currentUser) {
+      setResponseMessage('Вы должны быть авторизованы, чтобы добавлять посты.');
+      return;
+    }
+
     if (!postContent.trim()) {
       setResponseMessage('Пост не может быть пустым.');
       return;
@@ -63,7 +81,7 @@ function HomePage() {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
+    <>
       <div
         style={{
           display: 'flex',
@@ -77,15 +95,32 @@ function HomePage() {
       >
         <h1 style={{ margin: 0 }}>PasteBin</h1>
         <div>
-          <button
-            onClick={() => navigate('/login')}
-            style={{ marginRight: '10px', padding: '8px 16px' }}
-          >
-            Логин
-          </button>
-          <button onClick={() => navigate('/register')} style={{ padding: '8px 16px' }}>
-            Регистрация
-          </button>
+          {currentUser ? (
+            <div>
+              <span>Добро пожаловать, {currentUser.name}!</span>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('access_token'); // Удаляем токен
+                  setCurrentUser(null); // Сбрасываем состояние
+                }}
+                style={{ marginLeft: '10px', padding: '8px 16px' }}
+              >
+                Выйти
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={() => navigate('/login')}
+                style={{ marginRight: '10px', padding: '8px 16px' }}
+              >
+                Логин
+              </button>
+              <button onClick={() => navigate('/register')} style={{ padding: '8px 16px' }}>
+                Регистрация
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -121,8 +156,7 @@ function HomePage() {
           </button>
         </div>
 
-
-        <div style={{ flex: 1, margin: '20px',padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+        <div style={{ flex: 1, margin: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
           <h2>Популярные посты</h2>
           {popularPosts && popularPosts.posts ? (
             popularPosts.posts.length === 0 ? (
@@ -147,7 +181,7 @@ function HomePage() {
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

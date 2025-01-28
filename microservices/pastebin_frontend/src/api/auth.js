@@ -21,3 +21,17 @@ export const loginUser = async (userData) => {
     throw new Error(error.response?.data?.detail || 'Ошибка входа');
   }
 };
+
+
+export const getCurrentUser = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/get-current-user`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+      },
+    });
+    return response.data; // Например: { name: "User", id: 1 }
+  } catch {
+    return null;
+  }
+};

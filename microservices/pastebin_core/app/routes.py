@@ -16,7 +16,7 @@ PostsRouter = APIRouter()
 async def get_current_user_id() -> int:
     return 1  # Здесь подключите JWT или другой метод авторизации
 
-@PostsRouter.post("/add_post")
+@PostsRouter.post("/add-post")
 async def add_post(
     text_data: PostCreate,
     db: AsyncSession = Depends(get_session),
@@ -28,26 +28,24 @@ async def add_post(
             db=db,
             current_user_id=current_user_id,
         )
-        return RedirectResponse(url=f"/api/{new_text.short_key}", status_code=303)
+        return RedirectResponse(url=f"/api/get-post:{new_text.short_key}", status_code=303)
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=f"Error: {e}")
 
-@PostsRouter.post("/get_popular_posts", response_model=PopularPostsResponse)
+@PostsRouter.post("/get-popular-posts", response_model=PopularPostsResponse)
 async def get_popular_posts(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ):
     try:
         response = await get_popular_posts_service(request, session)
-        print("ASD")
-        print(response)
         return response
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=f"Error: {e}")
 
-@PostsRouter.get("/{short_key}")
+@PostsRouter.get("/get-post:{short_key}")
 async def get_text(
     request: Request,
     short_key: str,

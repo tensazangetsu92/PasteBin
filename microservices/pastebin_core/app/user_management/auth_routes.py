@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
 from starlette import status
 from starlette.responses import JSONResponse
-from .user_schemas import UserResponse, UserCreate
-from .user_services import register_user_service, login_user_service
+from .auth_schemas import UserResponse, UserCreate, UserLogin
+from .auth_services import register_user_service, login_user_service, get_current_user
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from .token_utils import decode_access_token, oauth2_scheme
 from ..postgresql.database import get_session
 from ..schemas import PostResponse
 
@@ -23,7 +26,7 @@ async def register_user(user: UserCreate, session: AsyncSession = Depends(get_se
         )
 
 @AuthRouter.post("/login")
-async def login(user: UserCreate, session: AsyncSession = Depends(get_session)):
+async def login(user: UserLogin, session: AsyncSession = Depends(get_session)):
     try:
         access_token = await login_user_service(user, session)
         response = JSONResponse(content={"message": "Login successful"})
@@ -41,3 +44,8 @@ async def login(user: UserCreate, session: AsyncSession = Depends(get_session)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
         )
+
+@AuthRouter.get("/get-current-user", response_model=UserResponse)
+async def get_user(session: AsyncSession = Depends(get_session)):
+    current_user = await get_current_user(session)
+    return current_user
