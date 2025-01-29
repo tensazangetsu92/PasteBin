@@ -1,5 +1,7 @@
 from io import BytesIO
 import json
+
+import asyncio
 import httpx
 from fastapi import HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -80,22 +82,25 @@ async def get_text_service(
         await cache_post(redis, short_key, response, settings.TTL_POSTS)
     return response
 
+
 async def get_popular_posts_service(request, session: AsyncSession):
     """Получение популярных постов."""
     redis = request.app.state.redis
     keys = await get_popular_posts_keys(redis)
-    posts = []
-    for short_key in keys:
+
+    async def fetch_post(short_key):
         text_record = await get_post_by_short_key(session, short_key)
         file_data = await get_file_from_bucket(text_record.blob_url)
         creation_time = get_post_age(text_record.created_at)
-        posts.append({
+        return {
             "name": text_record.name,
             "text_size_kilobytes": convert_to_kilobytes(file_data["size"]),
             "short_key": short_key,
             "created_at": creation_time,
             "expires_at": text_record.expires_at,
-        })
+        }
+
+    posts = await asyncio.gather(*(fetch_post(short_key) for short_key in keys))
     return {"posts": posts}
 
 

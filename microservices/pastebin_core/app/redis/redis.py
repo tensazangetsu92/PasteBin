@@ -29,13 +29,18 @@ async def disconnect_from_redis(redis_client: redis.Redis):
     if redis_client:
         await redis_client.close()
 
+
 async def get_and_increment_views(redis: Redis, short_key: str):
-    """Получить пост из кэша и увеличить счетчик просмотров."""
+    """Получить пост из кэша, увеличить счетчик просмотров и вернуть количество просмотров."""
     async with redis.pipeline() as pipe:
-        pipe.get(f"popular_post:{short_key}")
-        pipe.incr(f"post_views:{short_key}")
-        pipe.expire(f"post_views:{short_key}", settings.TTL_VIEWS)
-        cached_post, views, ttl_set_result  = await pipe.execute()
+        await pipe.zincrby("post_views", 1, short_key)
+        await pipe.expire("post_views", settings.TTL_VIEWS)
+        await pipe.zscore("post_views", short_key)
+        await pipe.get(f"popular_post:{short_key}")  # Получаем кэшированное представление поста
+        results = await pipe.execute()
+        views = results[0]  # Количество просмотров (балл)
+        cached_post = results[3]  # Кэшированные данные поста
+
     return cached_post, views
 
 async def get_post_from_cache(redis: Redis, short_key: str):
@@ -52,13 +57,9 @@ async def cache_post(redis: Redis, short_key: str, post_data: dict, ttl: int = 1
     post_data["expires_at"] = post_data["expires_at"].isoformat()
     await redis.set(f"popular_post:{short_key}", json.dumps(post_data), ex=ttl)
 
-async def get_popular_posts_keys(redis: Redis, limit: int = 10):
-    keys = await redis.keys("post_views:*")
-    post_views = []
-    for key in keys:
-        views = await redis.get(key)
-        if views:
-            post_views.append((key, int(views)))  # Убираем decode()
-    post_views.sort(key=lambda x: x[1], reverse=True)
-    return [key.split(':')[1] for key, _ in post_views[:limit]]
+async def get_popular_posts_keys(redis: Redis, limit: int = 3):
+    """Получить ключи популярных постов, отсортированных по количеству просмотров."""
+    popular_posts = await redis.zrevrange("post_views", 0, limit - 1, withscores=True)
+    post_keys = [key for key, _ in popular_posts]  # Извлекаем ключи постов
+    return post_keys
 

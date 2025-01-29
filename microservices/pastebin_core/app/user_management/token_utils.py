@@ -31,7 +31,6 @@ def decode_access_token(token: str):
     :raises HTTPException: Если токен недействителен или истёк.
     """
     try:
-        print(token)
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=settings.ALGORITHM)
         return payload
     except JWTError as e:
@@ -51,15 +50,13 @@ def get_current_user_from_token(token: str):
     """
     try:
         payload = decode_access_token(token)
-        print('2')
         user_id: str = payload.get("sub")
-        print('3')
         if user_id is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Неверный токен",
             )
-        return {"user_id": user_id}
+        return user_id
     except Exception as e:
         print(e)
 

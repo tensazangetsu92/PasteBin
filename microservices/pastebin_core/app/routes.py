@@ -29,7 +29,7 @@ async def add_post(
             db=db,
             current_user_id=current_user_id,
         )
-        return RedirectResponse(url=f"/api/get-post:{new_text.short_key}", status_code=303)
+        return RedirectResponse(url=f"/api/get-post/{new_text.short_key}", status_code=303)
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=f"Error: {e}")
@@ -54,7 +54,6 @@ async def get_text(
     user: dict = Depends(get_current_user),
 ):
     try:
-        print(user)
         response = await get_text_service(request, short_key, session)
         return response
     except HTTPException as e:
