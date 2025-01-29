@@ -1,10 +1,11 @@
 from io import BytesIO
 import json
 import httpx
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from .redis.redis import get_and_increment_views, cache_post, get_popular_posts_keys
 from .postgresql.crud import get_post_by_short_key
+from .user_management.auth_services import get_current_user
 from .yandex_bucket.storage import get_file_from_bucket
 from .utils import convert_to_kilobytes, get_post_age
 from .config import settings
@@ -51,7 +52,8 @@ async def add_post_service(
     return new_text
 
 async def get_text_service(
-    request, short_key: str, session: AsyncSession
+    request, short_key: str,
+    session: AsyncSession,
 ):
     """Получение текста по short_key."""
     redis = request.app.state.redis

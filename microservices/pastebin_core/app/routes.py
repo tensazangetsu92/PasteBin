@@ -8,6 +8,7 @@ from .services import (
     get_popular_posts_service,
 )
 from .schemas import PostCreate, PopularPostsResponse
+from .user_management.auth_services import get_current_user
 
 PostsRouter = APIRouter()
 
@@ -45,13 +46,15 @@ async def get_popular_posts(
         print(e)
         raise HTTPException(status_code=500, detail=f"Error: {e}")
 
-@PostsRouter.get("/get-post:{short_key}")
+@PostsRouter.get("/get-post/{short_key}")
 async def get_text(
     request: Request,
     short_key: str,
     session: AsyncSession = Depends(get_session),
+    user: dict = Depends(get_current_user),
 ):
     try:
+        print(user)
         response = await get_text_service(request, short_key, session)
         return response
     except HTTPException as e:

@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getPostByShortKey } from '../api/posts';
 
 function PostPage() {
   const { shortKey } = useParams();
   const [post, setPost] = useState(null);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
+        console.log(shortKey)
         const postData = await getPostByShortKey(shortKey);
         setPost(postData);
       } catch (err) {
@@ -18,7 +20,7 @@ function PostPage() {
     };
 
     fetchPost();
-  }, [shortKey]);
+  }, [shortKey, navigate]);
 
   if (error) return <p>{error}</p>;
   if (!post) return <p>Загрузка...</p>;

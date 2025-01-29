@@ -1,25 +1,8 @@
-import axios from 'axios';
-
-const API_URL = 'http://localhost:8000/api'; // Адрес вашего API
-
-const apiClient = axios.create({
-  baseURL: API_URL,
-});
-
-// Интерсептор для добавления токена
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-}, (error) => {
-  return Promise.reject(error);
-});
+import apiClient from './axiosConfig';
 
 export const getPostByShortKey = async (shortKey) => {
   try {
-    const response = await apiClient.get(`get-post/${shortKey}`);
+    const response = await apiClient.get(`/get-post/${shortKey}`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.detail || 'Не удалось получить пост');

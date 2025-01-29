@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { addPost, getPopularPosts } from '../api/posts';
-import { getCurrentUser } from '../api/auth';
 import { Link, useNavigate } from 'react-router-dom';
 
 function HomePage() {
@@ -35,25 +34,10 @@ function HomePage() {
       }
     };
 
-    const fetchCurrentUser = async () => {
-      try {
-        const user = await getCurrentUser();
-        setCurrentUser(user);
-      } catch (error) {
-        setCurrentUser(null);
-      }
-    };
-
     fetchPopularPosts();
-    fetchCurrentUser();
   }, []);
 
   const handleSubmit = async () => {
-    if (!currentUser) {
-      setResponseMessage('Вы должны быть авторизованы, чтобы добавлять посты.');
-      return;
-    }
-
     if (!postContent.trim()) {
       setResponseMessage('Пост не может быть пустым.');
       return;
