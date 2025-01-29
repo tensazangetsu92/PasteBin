@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from contextlib import asynccontextmanager
 from starlette.responses import JSONResponse
-from .postgresql.database import create_tables, delete_tables, new_session
+from .postgresql.database import create_tables, delete_tables, async_session
 from .redis.redis import connect_to_redis, disconnect_from_redis
 from .scheduler import start_scheduler, terminate_scheduler
 from .middlewares import setup_cors
@@ -14,7 +14,7 @@ async def lifespan(app: FastAPI):
     # await delete_tables()
     await create_tables()
     app.state.redis = await connect_to_redis()
-    async with new_session() as session:
+    async with async_session() as session:
         start_scheduler(session)
     yield
     terminate_scheduler()

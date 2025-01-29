@@ -1,10 +1,10 @@
 from io import BytesIO
 import json
-
 import asyncio
 import httpx
 from fastapi import HTTPException, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_session
+from .postgresql.database import async_session
 from .redis.redis import get_and_increment_views, cache_post, get_popular_posts_keys
 from .postgresql.crud import get_post_by_short_key
 from .user_management.auth_services import get_current_user
@@ -58,30 +58,29 @@ async def get_text_service(
     session: AsyncSession,
 ):
     """Получение текста по short_key."""
-    redis = request.app.state.redis
-    cached_post, views = await get_and_increment_views(redis, short_key)
-    if cached_post:
-        return json.loads(cached_post)
-    text_record = await get_post_by_short_key(session, short_key)
-    if not text_record:
-        raise HTTPException(status_code=404, detail="Text not found")
     try:
+        redis = request.app.state.redis
+        cached_post = await get_and_increment_views(redis, short_key)
+        if cached_post:
+            return json.loads(cached_post)
+        text_record = await get_post_by_short_key(session, short_key)
+        if not text_record:
+            raise HTTPException(status_code=404, detail="Text not found")
         file_data = await get_file_from_bucket(text_record.blob_url)
+        response = {
+            "name": text_record.name,
+            "text": file_data["content"],
+            "text_size_kilobytes": convert_to_kilobytes(file_data["size"]),
+            "short_key": short_key,
+            "created_at": text_record.created_at,
+            "expires_at": text_record.expires_at,
+            "views" : text_record.views_count,
+        }
+        if 22 >= settings.CACHE_VIEWS_THRESHOLD:
+            await cache_post(redis, short_key, response, settings.TTL_POSTS)
+        return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving text: {e}")
-    response = {
-        "name": text_record.name,
-        "text": file_data["content"],
-        "text_size_kilobytes": convert_to_kilobytes(file_data["size"]),
-        "short_key": short_key,
-        "created_at": text_record.created_at,
-        "expires_at": text_record.expires_at,
-        "views" : views,
-    }
-    if views >= settings.CACHE_VIEWS_THRESHOLD:
-        await cache_post(redis, short_key, response, settings.TTL_POSTS)
-    return response
-
 
 async def get_popular_posts_service(request, session: AsyncSession):
     """Получение популярных постов."""
@@ -89,16 +88,17 @@ async def get_popular_posts_service(request, session: AsyncSession):
     keys = await get_popular_posts_keys(redis)
 
     async def fetch_post(short_key):
-        text_record = await get_post_by_short_key(session, short_key)
-        file_data = await get_file_from_bucket(text_record.blob_url)
-        creation_time = get_post_age(text_record.created_at)
-        return {
-            "name": text_record.name,
-            "text_size_kilobytes": convert_to_kilobytes(file_data["size"]),
-            "short_key": short_key,
-            "created_at": creation_time,
-            "expires_at": text_record.expires_at,
-        }
+        async with async_session() as new_session:
+            text_record = await get_post_by_short_key(new_session, short_key)
+            file_data = await get_file_from_bucket(text_record.blob_url)
+            creation_time = get_post_age(text_record.created_at)
+            return {
+                "name": text_record.name,
+                "text_size_kilobytes": convert_to_kilobytes(file_data["size"]),
+                "short_key": short_key,
+                "created_at": creation_time,
+                "expires_at": text_record.expires_at,
+            }
 
     posts = await asyncio.gather(*(fetch_post(short_key) for short_key in keys))
     return {"posts": posts}

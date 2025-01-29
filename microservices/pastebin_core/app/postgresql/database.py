@@ -8,10 +8,10 @@ engine = create_async_engine(
     echo=False,
 )
 
-new_session = async_sessionmaker(engine, expire_on_commit=False)
+async_session = async_sessionmaker(engine, expire_on_commit=False)
 
 async def get_session() -> AsyncSession:
-    async with new_session() as session:
+    async with async_session() as session:
         yield session
 
 async def create_tables():

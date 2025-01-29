@@ -38,10 +38,9 @@ async def get_and_increment_views(redis: Redis, short_key: str):
         await pipe.zscore("post_views", short_key)
         await pipe.get(f"popular_post:{short_key}")  # Получаем кэшированное представление поста
         results = await pipe.execute()
-        views = results[0]  # Количество просмотров (балл)
         cached_post = results[3]  # Кэшированные данные поста
 
-    return cached_post, views
+    return cached_post
 
 async def get_post_from_cache(redis: Redis, short_key: str):
     cached_data = await redis.get(f"popular_post:{short_key}")

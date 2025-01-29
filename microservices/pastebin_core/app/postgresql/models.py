@@ -13,6 +13,9 @@ class PostOrm(Base):
     author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     created_at: Mapped[DateTime] = mapped_column(DateTime, default=datetime.utcnow)
     expires_at: Mapped[DateTime | None] = mapped_column(DateTime, nullable=True)
+    views_count: Mapped[int] = mapped_column(Integer, default=0)
+    likes_count: Mapped[int] = mapped_column(Integer, default=0)
+    dislikes_count: Mapped[int] = mapped_column(Integer, default=0)
 
     # Связь с пользователем
     author: Mapped["UserOrm"] = relationship("UserOrm", back_populates="posts")

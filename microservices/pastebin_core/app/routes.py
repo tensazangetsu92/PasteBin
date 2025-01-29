@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import RedirectResponse
-from .postgresql.database import new_session, get_session
+from .postgresql.database import async_session, get_session
 from .services import (
     add_post_service,
     get_text_service,
