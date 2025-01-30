@@ -6,7 +6,8 @@ import httpx
 from fastapi import HTTPException, Depends, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from .postgresql.database import async_session
-from .redis.redis import get_and_increment_views, cache_post, get_popular_posts_keys, get_post_from_cache
+from .redis.redis import get_post_and_incr_recent_views_in_cache, cache_post, get_popular_posts_keys, get_post_from_cache, \
+    increment_views_in_cache
 from .postgresql.crud import get_post_by_short_key
 from .user_management.auth_services import get_current_user
 from .yandex_bucket.storage import get_file_from_bucket
@@ -54,6 +55,10 @@ async def add_post_service(
     await db.commit()
     return new_text
 
+
+
+
+
 async def get_text_service(
     request,
     short_key: str,
@@ -63,7 +68,8 @@ async def get_text_service(
     """Получение текста по short_key."""
     try:
         redis = request.app.state.redis
-        cached_post, recent_views = await get_and_increment_views(redis, short_key)
+        background_tasks.add_task(increment_views_in_cache, redis, short_key)
+        cached_post, recent_views = await get_post_and_incr_recent_views_in_cache(redis, short_key)
         if cached_post:
             return json.loads(cached_post)
         else:
