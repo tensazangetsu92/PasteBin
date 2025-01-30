@@ -52,24 +52,24 @@ async def delete_text_record_by_id(
     else:
         print("Текста с таким id нет")
 
-async def delete_expired_records(session: AsyncSession):
-    """Удаляет записи с истёкшим сроком действия."""
-    try:
-        now = datetime.utcnow()
-        async with session.begin():
-            expired_records = await session.execute(
-                select(PostOrm).where(PostOrm.expires_at < now)
-            )
-            expired_records = expired_records.scalars().all()
+async def delete_expired_records_from_db(session: AsyncSession):
+    """Удаляет записи с истекшим сроком действия из базы данных."""
+    now = datetime.utcnow()
+    async with session.begin():
+        expired_records = await session.execute(
+            select(PostOrm).where(PostOrm.expires_at < now)
+        )
+        expired_records = expired_records.scalars().all()
 
-        for record in expired_records:
-            await delete_file_from_bucket("texts", record.author_id, record.short_key)  # Удаление файла из бакета
-            async with session.begin():
-                await session.execute(delete(PostOrm).where(PostOrm.id == record.id))  # Удаление записи из БД
+    return expired_records
 
-        print("Устаревшие записи удалены")
-    except Exception as e:
-        print(f"Ошибка при удалении устаревших записей: {e}")
+async def delete_record_and_file(session: AsyncSession, record: PostOrm):
+    """Удаляет запись и файл из бакета."""
+    await delete_file_from_bucket("texts", record.author_id, record.short_key)  # Удаление файла
+    async with session.begin():
+        await session.execute(delete(PostOrm).where(PostOrm.id == record.id))  # Удаление записи из базы данных
+
+
 
 async def get_user_by_id(session: AsyncSession, user_id: int):
     result = await session.execute(select(UserOrm).where(UserOrm.id == user_id))
@@ -93,3 +93,4 @@ async def create_user(session: AsyncSession, username: str, email: str, hashed_p
     except IntegrityError:
         await session.rollback()
         raise
+

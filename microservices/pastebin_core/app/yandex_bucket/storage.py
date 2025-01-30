@@ -21,7 +21,6 @@ async def upload_file_to_bucket(bucket_name: str, author_id: int, short_key: str
     except Exception as e:
         raise Exception(f"Ошибка загрузки файла в бакет: {e}")
 
-
 async def get_file_from_bucket(blob_url: str) -> dict:
     """Получение содержимого файла и его размера из бакета за один запрос."""
     try:
@@ -35,17 +34,6 @@ async def get_file_from_bucket(blob_url: str) -> dict:
         }
     except ClientError as e:
         raise Exception(f"Error retrieving file and metadata from bucket: {e}")
-
-# async def get_file_size_from_bucket(blob_url: str) -> int:
-#     """Получение размера файла из бакета."""
-#     try:
-#         bucket_name, object_name = parse_blob_url(blob_url)
-#         response = s3_client.head_object(Bucket=bucket_name, Key=object_name)
-#         file_size = response['ContentLength']
-#         return file_size
-#     except ClientError as e:
-#         print(f"Ошибка при получении размера файла: {e}")
-#         return None
 
 async def delete_file_from_bucket(bucket_name: str, author_id: int, object_short_key: str):
     """Удаление файла из бакета по URL ."""
