@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import RedirectResponse
 from .postgresql.database import async_session, get_session
@@ -50,11 +50,12 @@ async def get_popular_posts(
 async def get_text(
     request: Request,
     short_key: str,
+    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
     user: dict = Depends(get_current_user),
 ):
     try:
-        response = await get_text_service(request, short_key, session)
+        response = await get_text_service(request, short_key, session, background_tasks)
         return response
     except HTTPException as e:
         print(e)
