@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from microservices.pastebin_core.app.postgresql.models import PostOrm, UserOrm
@@ -69,6 +69,14 @@ async def delete_record_and_file(session: AsyncSession, record: PostOrm):
     async with session.begin():
         await session.execute(delete(PostOrm).where(PostOrm.id == record.id))  # Удаление записи из базы данных
 
+async def update_post_views_in_db(session: AsyncSession, post_id: str, views_count: int):
+    """Прибавляет количество просмотров к существующему значению в базе данных."""
+    async with session.begin():
+        await session.execute(
+            update(PostOrm)
+            .where(PostOrm.short_key == post_id)
+            .values(views_count=PostOrm.views_count + views_count)
+        )
 
 
 async def get_user_by_id(session: AsyncSession, user_id: int):

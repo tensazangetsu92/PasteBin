@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
     await create_tables()
     app.state.redis = await connect_to_redis()
     async with async_session() as session:
-        start_scheduler(session)
+        start_scheduler(session, app.state.redis)
     yield
     terminate_scheduler()
     await disconnect_from_redis(app.state.redis)

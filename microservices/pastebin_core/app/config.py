@@ -10,9 +10,9 @@ class Settings(BaseSettings):
     DB_NAME: str
 
     # Переменные для Yandex Object Storage
-    BUCKET_NAME: str
     BUCKET_ACCESS_KEY: str
     BUCKET_SECRET_KEY: str
+    BUCKET_NAME: str
 
     # Переменные для базы данных Redis
     DB_REDIS_HOST: str
@@ -20,15 +20,17 @@ class Settings(BaseSettings):
     DB_REDIS_INDEX: int
     DB_REDIS_USERNAME: str
     DB_REDIS_PASSWORD: str
-
     CACHE_VIEWS_THRESHOLD: int # Минимальное количество просмотров для добавления в кэш
-    HASH_SERVER_URL: str
     TTL_POSTS: int
     TTL_VIEWS: int
+
+    HASH_SERVER_URL: str
 
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
+
+    CLEANUP_INTERVAL: int
 
     @property
     def DATABASE_URL_asyncpg(self):

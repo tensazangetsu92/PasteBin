@@ -1,6 +1,7 @@
 import json
 import time
 from datetime import datetime
+from typing import Dict
 
 import redis.asyncio as redis
 from redis.asyncio import Redis
@@ -66,6 +67,19 @@ async def get_popular_posts_keys(redis: Redis, limit: int = 3):
     post_keys = [key for key, _ in popular_posts]  # Извлекаем ключи постов
     return post_keys
 
-# async def sync_views_to_db(redis: Redis, session: AsyncSession):
-#
-#
+async def get_all_views_from_cache(redis) -> Dict[str, int]:
+    """Получает все просмотры из кеша."""
+    keys = await redis.keys("views:*")
+    views = {}
+    for key in keys:
+        post_id = key.split(":")[1]
+        count = await redis.get(key)
+        if count:
+            views[post_id] = int(count)
+    return views
+
+async def clear_views_from_cache(redis, post_ids):
+    """Удаляет просмотры из кеша после синхронизации."""
+    keys = [f"views:{post_id}" for post_id in post_ids]
+    if keys:
+        await redis.delete(*keys)
