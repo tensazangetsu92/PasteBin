@@ -8,7 +8,7 @@ from .services import (
     get_popular_posts_service,
 )
 from .schemas import PostCreate, PopularPostsResponse
-from .user_management.auth_services import get_current_user
+from .user_management.token_utils import get_current_user_id
 
 PostsRouter = APIRouter()
 
@@ -52,7 +52,7 @@ async def get_text(
     short_key: str,
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(get_current_user_id),
 ):
     try:
         response = await get_text_service(request, short_key, session, background_tasks)

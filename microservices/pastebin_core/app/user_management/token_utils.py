@@ -1,6 +1,4 @@
-import json
-
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
@@ -41,22 +39,22 @@ def decode_access_token(token: str):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-def get_current_user_from_token(token: str):
-    """
-    Получить данные пользователя из токена.
-    :param token: JWT-токен.
-    :return: Данные пользователя (user_id, username).
-    :raises HTTPException: Если токен недействителен.
-    """
+def get_current_user_id(request: Request):
+    token = request.cookies.get("access_token")  # Берем токен из куки
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Не авторизован")
     try:
+        # Декодируем токен
         payload = decode_access_token(token)
-        user_id: str = payload.get("sub")
+        user_id: str = payload.get("sub")  # Извлекаем идентификатор пользователя из payload
         if user_id is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Неверный токен",
             )
-        return user_id
+        return int(user_id)
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Токен недействителен")
     except Exception as e:
         print(e)
-
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Ошибка при проверке токена")

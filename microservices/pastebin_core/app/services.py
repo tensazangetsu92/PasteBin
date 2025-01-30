@@ -1,4 +1,3 @@
-import time
 from io import BytesIO
 import json
 import asyncio
@@ -9,7 +8,6 @@ from .postgresql.database import async_session
 from .redis.redis import get_post_and_incr_recent_views_in_cache, cache_post, get_popular_posts_keys, get_post_from_cache, \
     increment_views_in_cache
 from .postgresql.crud import get_post_by_short_key
-from .user_management.auth_services import get_current_user
 from .yandex_bucket.storage import get_file_from_bucket
 from .utils import convert_to_kilobytes, get_post_age
 from .config import settings

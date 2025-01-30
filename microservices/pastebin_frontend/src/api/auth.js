@@ -18,3 +18,12 @@ export const loginUser = async (userData) => {
     throw new Error(error.response?.data?.detail || 'Ошибка входа');
   }
 };
+
+export const getCurrentUser = async () => {
+  try {
+    const response = await apiClient.get('/get-current-user'); // Запрос на сервер для получения текущего пользователя
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.detail || 'Ошибка получения данных о пользователе');
+  }
+};

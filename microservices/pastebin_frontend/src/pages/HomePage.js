@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { addPost, getPopularPosts } from '../api/posts';
 import { Link, useNavigate } from 'react-router-dom';
+import { getCurrentUser } from '../api/auth';
 
 function HomePage() {
   const [postName, setPostName] = useState('');
@@ -8,7 +9,7 @@ function HomePage() {
   const [expiresAt, setExpiresAt] = useState('never');
   const [responseMessage, setResponseMessage] = useState('');
   const [popularPosts, setPopularPosts] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null); // Состояние для текущего пользователя
   const navigate = useNavigate();
 
   const expirationOptions = {
@@ -24,6 +25,17 @@ function HomePage() {
     '1 year': 365 * 24 * 60 * 60,
   };
 
+  // Функция для получения данных о текущем пользователе
+  const fetchCurrentUser = async () => {
+  try {
+    const userData = await getCurrentUser(); // Получаем данные пользователя
+    setCurrentUser(userData);
+  } catch (error) {
+    console.error('Ошибка при получении пользователя:', error);
+    setCurrentUser(null);
+  }
+};
+
   useEffect(() => {
     const fetchPopularPosts = async () => {
       try {
@@ -35,6 +47,7 @@ function HomePage() {
     };
 
     fetchPopularPosts();
+    fetchCurrentUser(); // Получаем данные о текущем пользователе
   }, []);
 
   const handleSubmit = async () => {
@@ -81,7 +94,7 @@ function HomePage() {
         <div>
           {currentUser ? (
             <div>
-              <span>Добро пожаловать, {currentUser.name}!</span>
+              <span>{currentUser.username}</span> {/* Отображаем имя пользователя */}
               <button
                 onClick={() => {
                   localStorage.removeItem('access_token'); // Удаляем токен
