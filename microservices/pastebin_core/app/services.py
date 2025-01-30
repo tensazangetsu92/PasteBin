@@ -55,10 +55,6 @@ async def add_post_service(
     await db.commit()
     return new_text
 
-
-
-
-
 async def get_text_service(
     request,
     short_key: str,

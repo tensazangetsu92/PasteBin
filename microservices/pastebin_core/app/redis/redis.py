@@ -1,4 +1,5 @@
 import json
+import random
 import time
 from datetime import datetime
 from typing import Dict
@@ -61,11 +62,13 @@ async def get_post_and_incr_recent_views_in_cache(redis: Redis, short_key: str):
         cached_post = results[3]  # Кэшированные данные поста
     return cached_post, views
 
-async def get_popular_posts_keys(redis: Redis, limit: int = 3):
-    """Получить ключи популярных постов, отсортированных по количеству просмотров."""
-    popular_posts = await redis.zrevrange(SORTED_SET, 0, limit - 1, withscores=True)
-    post_keys = [key for key, _ in popular_posts]  # Извлекаем ключи постов
-    return post_keys
+
+async def get_popular_posts_keys(redis: Redis, top_n: int = 20, limit: int = 5):
+    """Получить случайные limit постов из top_n самых популярных."""
+    popular_posts = await redis.zrevrange(SORTED_SET, 0, top_n - 1, withscores=False)
+    # Выбираем 5 случайных из 20
+    selected_posts = random.sample(popular_posts, min(limit, len(popular_posts)))
+    return selected_posts
 
 async def get_all_views_from_cache(redis) -> Dict[str, int]:
     """Получает все просмотры из кеша."""
