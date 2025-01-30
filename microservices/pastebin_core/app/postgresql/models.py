@@ -17,7 +17,6 @@ class PostOrm(Base):
     likes_count: Mapped[int] = mapped_column(Integer, default=0)
     dislikes_count: Mapped[int] = mapped_column(Integer, default=0)
 
-    # Связь с пользователем
     author: Mapped["UserOrm"] = relationship("UserOrm", back_populates="posts")
 
 
@@ -31,7 +30,6 @@ class UserOrm(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    # Связь с постами
     posts: Mapped[list["PostOrm"]] = relationship("PostOrm", back_populates="author")
 
     def __repr__(self):

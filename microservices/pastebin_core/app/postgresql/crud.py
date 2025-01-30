@@ -33,7 +33,12 @@ async def get_post_by_short_key(session: AsyncSession, short_key: str):
     result = await session.execute(
         select(PostOrm).where(PostOrm.short_key == short_key)
     )
-    return result.scalar()
+    post = result.scalar()
+    if post:
+        post.views_count += 1
+        await session.commit()
+    return post
+
 
 async def delete_text_record_by_id(
         session: AsyncSession,
@@ -65,7 +70,6 @@ async def delete_expired_records(session: AsyncSession):
         print("Устаревшие записи удалены")
     except Exception as e:
         print(f"Ошибка при удалении устаревших записей: {e}")
-
 
 async def get_user_by_id(session: AsyncSession, user_id: int):
     result = await session.execute(select(UserOrm).where(UserOrm.id == user_id))

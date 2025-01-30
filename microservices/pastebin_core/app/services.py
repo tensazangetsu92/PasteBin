@@ -60,7 +60,7 @@ async def get_text_service(
     """Получение текста по short_key."""
     try:
         redis = request.app.state.redis
-        cached_post = await get_and_increment_views(redis, short_key)
+        cached_post, recent_views = await get_and_increment_views(redis, short_key)
         if cached_post:
             return json.loads(cached_post)
         text_record = await get_post_by_short_key(session, short_key)
@@ -76,7 +76,7 @@ async def get_text_service(
             "expires_at": text_record.expires_at,
             "views" : text_record.views_count,
         }
-        if 22 >= settings.CACHE_VIEWS_THRESHOLD:
+        if recent_views >= settings.CACHE_VIEWS_THRESHOLD:
             await cache_post(redis, short_key, response, settings.TTL_POSTS)
         return response
     except Exception as e:
@@ -99,7 +99,6 @@ async def get_popular_posts_service(request, session: AsyncSession):
                 "created_at": creation_time,
                 "expires_at": text_record.expires_at,
             }
-
     posts = await asyncio.gather(*(fetch_post(short_key) for short_key in keys))
     return {"posts": posts}
 

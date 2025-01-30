@@ -34,7 +34,7 @@ async def login(response: Response, user: UserLogin, session: AsyncSession = Dep
             value=access_token,  # Значение куки — сам токен
             httponly=True,  # Запрещаем доступ к куке через JavaScript
             secure=False,  # Используйте True, если работаете через HTTPS
-            samesite="Strict",  # Для кросс-доменных запросов
+            samesite="strict",  # Для кросс-доменных запросов
             max_age=3600,  # Устанавливает время жизни куки (1 час)
         )
         return {"access_token" : access_token, "token_type": "bearer"}
