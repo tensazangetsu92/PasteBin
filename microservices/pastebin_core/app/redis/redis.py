@@ -1,15 +1,11 @@
 import json
 import random
-import time
 from datetime import datetime
 from typing import Dict
-
 import redis.asyncio as redis
 from redis.asyncio import Redis
-
 from microservices.pastebin_core.app.config import settings
 
-SORTED_SET = "recent_views"
 
 async def connect_to_redis() -> redis.Redis:
     """Подключение к Redis."""
@@ -50,25 +46,24 @@ async def get_post_from_cache(redis: Redis, short_key: str):
 async def increment_views_in_cache(redis: Redis, short_key: str):
     return await redis.incr(f"views:{short_key}")
 
-async def get_post_and_incr_recent_views_in_cache(redis: Redis, short_key: str):
+async def get_popular_posts_keys(redis: Redis, sorted_set: str, top_n: int = 20, limit: int = 5):
+    """Получить случайные limit постов из top_n самых популярных."""
+    popular_posts = await redis.zrevrange(sorted_set, 0, top_n - 1, withscores=False)
+    # Выбираем 5 случайных из 20
+    selected_posts = random.sample(popular_posts, min(limit, len(popular_posts)))
+    return selected_posts
+
+async def get_post_and_incr_recent_views_in_cache(redis: Redis, short_key: str, sorted_set: str):
     """Получить пост из кэша, увеличить счетчик просмотров и вернуть количество просмотров."""
     async with redis.pipeline() as pipe:
-        await pipe.zincrby(SORTED_SET, 1, short_key)
-        await pipe.expire(SORTED_SET, settings.TTL_VIEWS)
-        await pipe.zscore(SORTED_SET, short_key)
+        await pipe.zincrby(sorted_set, 1, short_key)
+        await pipe.expire(sorted_set, settings.TTL_VIEWS)
+        await pipe.zscore(sorted_set, short_key)
         await pipe.get(f"popular_post:{short_key}")  # Получаем кэшированное представление поста
         results = await pipe.execute()
         views = results[0]  # Количество просмотров (балл)
         cached_post = results[3]  # Кэшированные данные поста
     return cached_post, views
-
-
-async def get_popular_posts_keys(redis: Redis, top_n: int = 20, limit: int = 5):
-    """Получить случайные limit постов из top_n самых популярных."""
-    popular_posts = await redis.zrevrange(SORTED_SET, 0, top_n - 1, withscores=False)
-    # Выбираем 5 случайных из 20
-    selected_posts = random.sample(popular_posts, min(limit, len(popular_posts)))
-    return selected_posts
 
 async def get_all_views_from_cache(redis) -> Dict[str, int]:
     """Получает все просмотры из кеша."""
@@ -82,7 +77,18 @@ async def get_all_views_from_cache(redis) -> Dict[str, int]:
     return views
 
 async def clear_views_from_cache(redis, post_ids):
-    """Удаляет просмотры из кеша после синхронизации."""
     keys = [f"views:{post_id}" for post_id in post_ids]
     if keys:
         await redis.delete(*keys)
+
+
+async def get_all_keys_sorted_set(redis: Redis, sorted_set: str):
+    keys = await redis.zrange(sorted_set, 0, -1, withscores=True)
+    return keys
+
+async def delete_key_sorted_set(redis: Redis, sorted_set: str, short_key: str):
+    await redis.zrem(sorted_set, short_key)
+
+async def update_score_sorted_set(redis: Redis, sorted_set: str, short_key: str, score: int):
+    await redis.zadd(sorted_set, {short_key: score})
+

@@ -63,7 +63,7 @@ async def get_text_service(
     try:
         redis = request.app.state.redis
         background_tasks.add_task(increment_views_in_cache, redis, short_key)
-        cached_post, recent_views = await get_post_and_incr_recent_views_in_cache(redis, short_key)
+        cached_post, recent_views = await get_post_and_incr_recent_views_in_cache(redis, short_key, settings.SORTED_SET_RECENT_VIEWS)
         if cached_post:
             return json.loads(cached_post)
         else:
@@ -89,7 +89,7 @@ async def get_text_service(
 async def get_popular_posts_service(request, session: AsyncSession):
     """Получение популярных постов."""
     redis = request.app.state.redis
-    keys = await get_popular_posts_keys(redis)
+    keys = await get_popular_posts_keys(redis, settings.SORTED_SET_RECENT_VIEWS)
 
     async def fetch_post(short_key):
         text_record_cached = await get_post_from_cache(redis, short_key)
