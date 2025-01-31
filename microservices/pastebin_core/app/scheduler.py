@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from redis.asyncio import Redis
 from microservices.pastebin_core.app.config import settings
 from microservices.pastebin_core.app.postgresql.crud import delete_expired_records_from_db, \
-    delete_record_and_file, update_post_views_in_db
+    delete_record_and_file, update_record_views_in_db
 from microservices.pastebin_core.app.redis.redis import get_all_views_from_cache, clear_views_from_cache, \
     get_all_keys_sorted_set, delete_key_sorted_set, update_score_sorted_set
 
@@ -35,7 +35,7 @@ async def sync_views(session: AsyncSession, redis):
     """Синхронизирует просмотры из Redis в базу данных."""
     views = await get_all_views_from_cache(redis)  # Получаем просмотры
     for post_id, count in views.items():
-        await update_post_views_in_db(session, post_id, count)  # Обновляем в БД
+        await update_record_views_in_db(session, post_id, count)  # Обновляем в БД
     await clear_views_from_cache(redis, views.keys())  # Очищаем кеш
 
 async def decrement_scores(redis: Redis):

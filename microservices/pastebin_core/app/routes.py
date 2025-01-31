@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
+from redis.commands.search.reducers import random_sample
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import RedirectResponse
 from .postgresql.database import async_session, get_session
 from .services import (
     add_post_service,
     get_text_service,
-    get_popular_posts_service,
+    get_popular_posts_service, get_user_posts_service,
 )
 from .schemas import PostCreate, PopularPostsResponse
 from .user_management.token_utils import get_current_user_id
@@ -14,9 +15,6 @@ PostsRouter = APIRouter()
 
 
 
-async def get_current_user_id() -> int:
-    return 1  # Здесь подключите JWT или другой метод авторизации
-
 @PostsRouter.post("/add-post")
 async def add_post(
     text_data: PostCreate,
@@ -24,12 +22,7 @@ async def add_post(
     current_user_id: int = Depends(get_current_user_id),
 ):
     try:
-        new_text = await add_post_service(
-            text_data=text_data,
-            db=db,
-            current_user_id=current_user_id,
-        )
-        return RedirectResponse(url=f"/api/get-post/{new_text.short_key}", status_code=303)
+        return await add_post_service(text_data, db, current_user_id)
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=f"Error: {e}")
@@ -40,8 +33,7 @@ async def get_popular_posts(
     session: AsyncSession = Depends(get_session),
 ):
     try:
-        response = await get_popular_posts_service(request, session)
-        return response
+        return await get_popular_posts_service(request, session)
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=f"Error: {e}")
@@ -52,12 +44,22 @@ async def get_text(
     short_key: str,
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
-    user: dict = Depends(get_current_user_id),
+    user_id = Depends(get_current_user_id),
 ):
     try:
-        response = await get_text_service(request, short_key, session, background_tasks)
-        return response
+        return await get_text_service(request, short_key, session, background_tasks)
     except HTTPException as e:
         print(e)
         raise HTTPException(status_code=500, detail=f"Error: {e}")
 
+@PostsRouter.post("/get-user-posts")
+async def get_user_posts(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    user_id = Depends(get_current_user_id),
+):
+    try:
+        return await get_user_posts_service(request, session, user_id)
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=f"Error: {e}")

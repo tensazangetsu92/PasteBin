@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { addPost, getPopularPosts } from '../api/posts';
+import { addPost, getPopularPosts, getUserPosts } from '../api/posts';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../api/auth';
 
@@ -9,7 +9,8 @@ function HomePage() {
   const [expiresAt, setExpiresAt] = useState('never');
   const [responseMessage, setResponseMessage] = useState('');
   const [popularPosts, setPopularPosts] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null); // Состояние для текущего пользователя
+  const [userPosts, setUserPosts] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
 
   const expirationOptions = {
@@ -36,6 +37,8 @@ function HomePage() {
   }
 };
 
+
+
   useEffect(() => {
     const fetchPopularPosts = async () => {
       try {
@@ -49,6 +52,23 @@ function HomePage() {
     fetchPopularPosts();
     fetchCurrentUser(); // Получаем данные о текущем пользователе
   }, []);
+
+  useEffect(() => {
+    const fetchUserPosts = async () => {
+  try {
+    if (currentUser) {
+      const posts = await getUserPosts();
+      setUserPosts(posts);
+    }
+  } catch (error) {
+    console.error('Ошибка при загрузке постов пользователя:', error);
+  }
+};
+
+  if (currentUser) {
+    fetchUserPosts(); // Загружаем посты после получения данных о пользователе
+  }
+}, [currentUser]);
 
   const handleSubmit = async () => {
     if (!postContent.trim()) {
@@ -178,6 +198,29 @@ function HomePage() {
           )}
         </div>
       </div>
+
+      <div style={{ margin: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+      <h2>Мои посты</h2>
+      {userPosts.length === 0 ? (
+        <p>У вас пока нет постов.</p>
+      ) : (
+        <ul>
+          {userPosts.map((post) => (
+            <li key={post.id} style={{ marginBottom: '10px' }}>
+              <Link to={`/${post.short_key}`}>
+                <strong>{post.name}</strong>
+              </Link>
+              <br />
+              Просмотры: {post.views}
+              <br />
+              Создан: {post.created_at}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+
+
     </>
   );
 }

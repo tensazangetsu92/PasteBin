@@ -7,7 +7,7 @@ from microservices.pastebin_core.app.postgresql.models import PostOrm, UserOrm
 from microservices.pastebin_core.app.yandex_bucket.storage import delete_file_from_bucket
 
 
-async def create_post_record(
+async def create_record(
     session: AsyncSession,
     object_name: str,
     blob_url: str,
@@ -28,7 +28,7 @@ async def create_post_record(
     await session.refresh(new_text)
     return new_text
 
-async def get_post_by_short_key(session: AsyncSession, short_key: str):
+async def get_record_by_short_key(session: AsyncSession, short_key: str):
     """Получить запись по короткому ключу."""
     result = await session.execute(
         select(PostOrm).where(PostOrm.short_key == short_key)
@@ -38,7 +38,6 @@ async def get_post_by_short_key(session: AsyncSession, short_key: str):
         post.views_count += 1
         await session.commit()
     return post
-
 
 async def delete_text_record_by_id(
         session: AsyncSession,
@@ -51,6 +50,10 @@ async def delete_text_record_by_id(
         await session.commit()
     else:
         print("Текста с таким id нет")
+
+async def get_records_by_user_id(session: AsyncSession, user_id: int):
+    result = await session.execute(select(PostOrm).where(PostOrm.author_id == user_id))
+    return result.scalars().all()
 
 async def delete_expired_records_from_db(session: AsyncSession):
     """Удаляет записи с истекшим сроком действия из базы данных."""
@@ -69,7 +72,7 @@ async def delete_record_and_file(session: AsyncSession, record: PostOrm):
     async with session.begin():
         await session.execute(delete(PostOrm).where(PostOrm.id == record.id))  # Удаление записи из базы данных
 
-async def update_post_views_in_db(session: AsyncSession, post_id: str, views_count: int):
+async def update_record_views_in_db(session: AsyncSession, post_id: str, views_count: int):
     """Прибавляет количество просмотров к существующему значению в базе данных."""
     async with session.begin():
         await session.execute(

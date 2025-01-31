@@ -26,3 +26,12 @@ export const getPopularPosts = async () => {
     throw new Error(error.response?.data?.detail || 'Неизвестная ошибка');
   }
 };
+
+export const getUserPosts = async () => {
+  try {
+    const response = await apiClient.post(`/get-user-posts`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.detail || 'Не удалось получить посты пользователя');
+  }
+};

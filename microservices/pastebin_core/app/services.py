@@ -2,16 +2,16 @@ from io import BytesIO
 import json
 import asyncio
 import httpx
-from fastapi import HTTPException, Depends, BackgroundTasks
+from fastapi import HTTPException, Depends, BackgroundTasks, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from .postgresql.database import async_session
 from .redis.redis import get_post_and_incr_recent_views_in_cache, cache_post, get_popular_posts_keys, get_post_from_cache, \
     increment_views_in_cache
-from .postgresql.crud import get_post_by_short_key
+from .postgresql.crud import get_record_by_short_key, get_records_by_user_id
 from .yandex_bucket.storage import get_file_from_bucket
 from .utils import convert_to_kilobytes, get_post_age
 from .config import settings
-from .postgresql.crud import create_post_record
+from .postgresql.crud import create_record
 from .yandex_bucket.storage import upload_file_to_bucket
 from .schemas import PostCreate
 
@@ -37,12 +37,12 @@ async def add_post_service(
     """Добавление нового поста."""
     file_obj = BytesIO(text_data.text.encode("utf-8"))
     short_key = await get_hash()
-    while await get_post_by_short_key(db, short_key) is not None:
+    while await get_record_by_short_key(db, short_key) is not None:
         short_key = await get_hash()
     blob_url = await upload_file_to_bucket(
         settings.BUCKET_NAME, current_user_id, short_key, file_obj
     )
-    new_text = await create_post_record(
+    new_post = await create_record(
         session=db,
         object_name=text_data.name,
         blob_url=blob_url,
@@ -51,10 +51,10 @@ async def add_post_service(
         expires_at=text_data.expires_at.replace(tzinfo=None),
     )
     await db.commit()
-    return new_text
+    return new_post
 
 async def get_text_service(
-    request,
+    request: Request,
     short_key: str,
     session: AsyncSession,
     background_tasks: BackgroundTasks,
@@ -67,7 +67,7 @@ async def get_text_service(
         if cached_post:
             return json.loads(cached_post)
         else:
-            text_record = await get_post_by_short_key(session, short_key)
+            text_record = await get_record_by_short_key(session, short_key)
             if not text_record:
                 raise HTTPException(status_code=404, detail="Text not found")
             file_data = await get_file_from_bucket(text_record.blob_url)
@@ -104,7 +104,7 @@ async def get_popular_posts_service(request, session: AsyncSession):
             }
         else:
             async with async_session() as new_session:
-                text_record = await get_post_by_short_key(new_session, short_key)
+                text_record = await get_record_by_short_key(new_session, short_key)
                 file_data = await get_file_from_bucket(text_record.blob_url)
                 creation_time = get_post_age(text_record.created_at)
                 return {
@@ -117,4 +117,20 @@ async def get_popular_posts_service(request, session: AsyncSession):
     posts = await asyncio.gather(*(fetch_post(short_key) for short_key in keys))
     return {"posts": posts}
 
+
+async def get_user_posts_service(request: Request, session: AsyncSession, user_id: int):
+    """Получить список постов текущего пользователя."""
+    posts = await get_records_by_user_id(session, user_id)
+    response = [
+        {
+            "id": post.id,
+            "name": post.name,
+            "short_key": post.short_key,
+            "created_at": post.created_at,
+            "expires_at": post.expires_at,
+            "views": post.views_count,
+        }
+        for post in posts
+    ]
+    return response
 
