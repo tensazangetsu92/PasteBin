@@ -3,8 +3,8 @@ from typing import Optional
 from sqlalchemy import select, delete, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from microservices.pastebin_core.app.postgresql.models import PostOrm, UserOrm
-from microservices.pastebin_core.app.yandex_bucket.storage import delete_file_from_bucket
+from microservices.pastebin_backend.app.postgresql.models import PostOrm, UserOrm
+from microservices.pastebin_backend.app.yandex_bucket.storage import delete_file_from_bucket
 
 
 async def create_record(

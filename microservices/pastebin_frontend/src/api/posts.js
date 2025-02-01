@@ -20,7 +20,7 @@ export const addPost = async (postData) => {
 
 export const getPopularPosts = async () => {
   try {
-    const response = await apiClient.post(`/get-popular-posts`);
+    const response = await apiClient.get(`/get-popular-posts`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.detail || 'Неизвестная ошибка');
@@ -29,7 +29,7 @@ export const getPopularPosts = async () => {
 
 export const getUserPosts = async () => {
   try {
-    const response = await apiClient.post(`/get-user-posts`);
+    const response = await apiClient.get(`/get-user-posts`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.detail || 'Не удалось получить посты пользователя');

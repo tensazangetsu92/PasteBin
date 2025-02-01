@@ -1,10 +1,10 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.ext.asyncio import AsyncSession
 from redis.asyncio import Redis
-from microservices.pastebin_core.app.config import settings
-from microservices.pastebin_core.app.postgresql.crud import delete_expired_records_from_db, \
+from microservices.pastebin_backend.app.config import settings
+from microservices.pastebin_backend.app.postgresql.crud import delete_expired_records_from_db, \
     delete_record_and_file, update_record_views_in_db
-from microservices.pastebin_core.app.redis.redis import get_all_views_from_cache, clear_views_from_cache, \
+from microservices.pastebin_backend.app.redis.redis import get_all_views_from_cache, clear_views_from_cache, \
     get_all_keys_sorted_set, delete_key_sorted_set, update_score_sorted_set
 
 scheduler = AsyncIOScheduler()

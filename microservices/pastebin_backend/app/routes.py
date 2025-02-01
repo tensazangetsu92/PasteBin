@@ -27,7 +27,7 @@ async def add_post(
         print(e)
         raise HTTPException(status_code=500, detail=f"Error: {e}")
 
-@PostsRouter.post("/get-popular-posts", response_model=PopularPostsResponse)
+@PostsRouter.get("/get-popular-posts", response_model=PopularPostsResponse)
 async def get_popular_posts(
     request: Request,
     session: AsyncSession = Depends(get_session),
@@ -52,7 +52,7 @@ async def get_text(
         print(e)
         raise HTTPException(status_code=500, detail=f"Error: {e}")
 
-@PostsRouter.post("/get-user-posts")
+@PostsRouter.get("/get-user-posts")
 async def get_user_posts(
     request: Request,
     session: AsyncSession = Depends(get_session),

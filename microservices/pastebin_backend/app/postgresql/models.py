@@ -1,5 +1,5 @@
 from datetime import datetime
-from microservices.pastebin_core.app.postgresql.database import Base
+from microservices.pastebin_backend.app.postgresql.database import Base
 from sqlalchemy import Integer, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

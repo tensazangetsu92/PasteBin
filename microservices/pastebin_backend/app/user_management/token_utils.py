@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from fastapi import status
-from microservices.pastebin_core.app.config import settings
+from microservices.pastebin_backend.app.config import settings
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/login")

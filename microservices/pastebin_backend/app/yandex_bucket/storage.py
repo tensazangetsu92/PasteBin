@@ -1,8 +1,8 @@
 from typing import BinaryIO
 import boto3
 from botocore.exceptions import ClientError
-from microservices.pastebin_core.app.config import settings
-from microservices.pastebin_core.app.utils import parse_blob_url
+from microservices.pastebin_backend.app.config import settings
+from microservices.pastebin_backend.app.utils import parse_blob_url
 
 # Инициализация клиента для Yandex Object Storage
 s3_client = boto3.client(

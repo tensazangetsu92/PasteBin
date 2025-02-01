@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Dict
 import redis.asyncio as redis
 from redis.asyncio import Redis
-from microservices.pastebin_core.app.config import settings
+from microservices.pastebin_backend.app.config import settings
 
 
 async def connect_to_redis() -> redis.Redis:
