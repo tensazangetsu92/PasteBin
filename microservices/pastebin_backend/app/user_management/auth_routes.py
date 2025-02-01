@@ -4,16 +4,19 @@ from .auth_schemas import UserResponse, UserCreate, UserLogin
 from .auth_services import register_user_service, login_user_service, get_current_user
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..postgresql.database import get_session
-
+from ..logger import logger
 
 AuthRouter = APIRouter()
 
 @AuthRouter.post("/register", response_model=UserResponse)
 async def register_user(user: UserCreate, session: AsyncSession = Depends(get_session)):
+    logger.info(f"Attempt to register user: {user.email}")
     try:
-        return await register_user_service(user, session)
+        result = await register_user_service(user, session)
+        logger.info(f"User {user.email} registered successfully")
+        return result
     except Exception as e:
-        print(e)
+        logger.error(f"Registration error for {user.email}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
@@ -21,10 +24,13 @@ async def register_user(user: UserCreate, session: AsyncSession = Depends(get_se
 
 @AuthRouter.post("/login")
 async def login(response: Response, user: UserLogin, session: AsyncSession = Depends(get_session)):
+    logger.info(f"User {user.username} attempting to log in")
     try:
-        return await login_user_service(user, session, response)
+        result = await login_user_service(user, session, response)
+        logger.info(f"User {user.username} logged in successfully")
+        return result
     except Exception as e:
-        print(e)
+        logger.error(f"Login error for {user.username}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
@@ -32,12 +38,14 @@ async def login(response: Response, user: UserLogin, session: AsyncSession = Dep
 
 @AuthRouter.get("/get-current-user")
 async def get_current_user_route(request: Request, session: AsyncSession = Depends(get_session)):
+    logger.info(f"Fetching current user for request {request.client.host}")
     try:
-        return await get_current_user(request, session)
+        result = await get_current_user(request, session)
+        logger.info(f"Current user retrieved: {result}")
+        return result
     except Exception as e:
-        print(e)
+        logger.error(f"Error fetching current user: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
         )
-
