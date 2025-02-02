@@ -6,9 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..postgresql.database import get_session
 from ..logger import logger
 
-AuthRouter = APIRouter()
+auth_router = APIRouter()
 
-@AuthRouter.post("/register", response_model=UserResponse)
+@auth_router.post("/register", response_model=UserResponse)
 async def register_user(user: UserCreate, session: AsyncSession = Depends(get_session)):
     logger.info(f"Attempt to register user: {user.email}")
     try:
@@ -22,7 +22,7 @@ async def register_user(user: UserCreate, session: AsyncSession = Depends(get_se
             detail="Internal server error"
         )
 
-@AuthRouter.post("/login")
+@auth_router.post("/login")
 async def login(response: Response, user: UserLogin, session: AsyncSession = Depends(get_session)):
     logger.info(f"User {user.username} attempting to log in")
     try:
@@ -36,7 +36,7 @@ async def login(response: Response, user: UserLogin, session: AsyncSession = Dep
             detail="Internal server error"
         )
 
-@AuthRouter.get("/get-current-user")
+@auth_router.get("/get-current-user")
 async def get_current_user_route(request: Request, session: AsyncSession = Depends(get_session)):
     logger.info(f"Fetching current user for request {request.client.host}")
     try:

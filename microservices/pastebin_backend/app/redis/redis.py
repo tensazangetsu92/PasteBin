@@ -43,6 +43,16 @@ async def get_post_from_cache(redis: Redis, short_key: str):
         return post_data
     return None
 
+
+async def delete_post_from_cache(redis: Redis, short_key: str, sorted_set: str):
+    """Удаляет пост по short_key из кэша Redis с использованием pipeline."""
+    async with redis.pipeline() as pipe:
+        pipe.delete(f"popular_post:{short_key}")
+        pipe.delete(f"views:{short_key}")
+        pipe.zrem(sorted_set, short_key)
+        await pipe.execute()
+
+
 async def increment_views_in_cache(redis: Redis, short_key: str):
     return await redis.incr(f"views:{short_key}")
 
@@ -56,10 +66,10 @@ async def get_popular_posts_keys(redis: Redis, sorted_set: str, top_n: int = 20,
 async def get_post_and_incr_recent_views_in_cache(redis: Redis, short_key: str, sorted_set: str):
     """Получить пост из кэша, увеличить счетчик просмотров и вернуть количество просмотров."""
     async with redis.pipeline() as pipe:
-        await pipe.zincrby(sorted_set, 1, short_key)
-        await pipe.expire(sorted_set, settings.TTL_VIEWS)
-        await pipe.zscore(sorted_set, short_key)
-        await pipe.get(f"popular_post:{short_key}")  # Получаем кэшированное представление поста
+        pipe.zincrby(sorted_set, 1, short_key)
+        pipe.expire(sorted_set, settings.TTL_VIEWS)
+        pipe.zscore(sorted_set, short_key)
+        pipe.get(f"popular_post:{short_key}")  # Получаем кэшированное представление поста
         results = await pipe.execute()
         views = results[0]  # Количество просмотров (балл)
         cached_post = results[3]  # Кэшированные данные поста

@@ -29,7 +29,6 @@ async def create_record(
     return new_text
 
 async def get_record_by_short_key(session: AsyncSession, short_key: str):
-    """Получить запись по короткому ключу."""
     result = await session.execute(
         select(PostOrm).where(PostOrm.short_key == short_key)
     )
@@ -39,23 +38,19 @@ async def get_record_by_short_key(session: AsyncSession, short_key: str):
         await session.commit()
     return post
 
-async def delete_text_record_by_id(
-        session: AsyncSession,
-        text_id: int
-):
-    """Удалить запись по id"""
-    text = await session.get(PostOrm, text_id)
-    if text:
-        await session.delete(text)
-        await session.commit()
-    else:
-        print("Текста с таким id нет")
+async def delete_record_by_short_key(session: AsyncSession, short_key: str):
+    post = await get_record_by_short_key(session, short_key)  # Получаем запись
+    if not post:
+        return None
+    async with session.begin():
+        await session.execute(delete(PostOrm).where(PostOrm.short_key == short_key))  # Удаляем запись по short_key
+    return post  # Возвращаем удалённый пост для дальнейшей обработки
 
 async def get_records_by_user_id(session: AsyncSession, user_id: int):
     result = await session.execute(select(PostOrm).where(PostOrm.author_id == user_id))
     return result.scalars().all()
 
-async def delete_expired_records_from_db(session: AsyncSession):
+async def get_expired_records_from_db(session: AsyncSession):
     """Удаляет записи с истекшим сроком действия из базы данных."""
     now = datetime.utcnow()
     async with session.begin():
@@ -63,7 +58,6 @@ async def delete_expired_records_from_db(session: AsyncSession):
             select(PostOrm).where(PostOrm.expires_at < now)
         )
         expired_records = expired_records.scalars().all()
-
     return expired_records
 
 async def delete_record_and_file(session: AsyncSession, record: PostOrm):

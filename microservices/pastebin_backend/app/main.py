@@ -5,8 +5,8 @@ from .postgresql.database import create_tables, delete_tables, async_session
 from .redis.redis import connect_to_redis, disconnect_from_redis
 from .scheduler import start_scheduler, terminate_scheduler
 from .middlewares import setup_cors
-from .routes import PostsRouter
-from .user_management.auth_routes import AuthRouter
+from .routes import posts_router
+from .user_management.auth_routes import auth_router
 
 
 @asynccontextmanager
@@ -22,8 +22,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 setup_cors(app)
-app.include_router(PostsRouter, prefix="/api", tags=["PasteBin"])
-app.include_router(AuthRouter, prefix="/api", tags=["registration and login"])
+app.include_router(posts_router, prefix="/api", tags=["PasteBin"])
+app.include_router(auth_router, prefix="/api", tags=["registration and login"])
 
 @app.exception_handler(HTTPException)
 async def validation_exception_handler(request, exc: HTTPException):

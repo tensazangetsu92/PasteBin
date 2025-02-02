@@ -6,30 +6,30 @@ from .services import (
     add_post_service,
     get_text_service,
     get_popular_posts_service,
-    get_user_posts_service,
+    get_user_posts_service, delete_post_service,
 )
 from .schemas import PostCreate, PopularPostsResponse
 from .user_management.token_utils import get_current_user_id
 from .logger import logger
 
-PostsRouter = APIRouter()
+posts_router = APIRouter()
 
-@PostsRouter.post("/add-post")
+@posts_router.post("/add-post")
 async def add_post(
     text_data: PostCreate,
     db: AsyncSession = Depends(get_session),
-    current_user_id: int = Depends(get_current_user_id),
+    user_id: int = Depends(get_current_user_id),
 ):
-    logger.info(f"User {current_user_id} is adding a post: {text_data}")
+    logger.info(f"User {user_id} is adding a post: {text_data}")
     try:
-        result = await add_post_service(text_data, db, current_user_id)
+        result = await add_post_service(text_data, db, user_id)
         logger.info(f"Post added successfully: {result}")
         return result
     except Exception as e:
         logger.error(f"Error adding post: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-@PostsRouter.get("/get-popular-posts", response_model=PopularPostsResponse)
+@posts_router.get("/get-popular-posts", response_model=PopularPostsResponse)
 async def get_popular_posts(request: Request, session: AsyncSession = Depends(get_session)):
     logger.info(f"Fetching popular posts from {request.client.host}")
     try:
@@ -38,8 +38,8 @@ async def get_popular_posts(request: Request, session: AsyncSession = Depends(ge
         logger.error(f"Error fetching popular posts: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-@PostsRouter.get("/get-post/{short_key}")
-async def get_text(
+@posts_router.get("/get-post/{short_key}")
+async def get_post(
     request: Request,
     short_key: str,
     background_tasks: BackgroundTasks,
@@ -56,7 +56,7 @@ async def get_text(
         logger.error(f"Error fetching post {short_key}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-@PostsRouter.get("/get-user-posts")
+@posts_router.get("/get-user-posts")
 async def get_user_posts(request: Request, session: AsyncSession = Depends(get_session), user_id: int = Depends(get_current_user_id)):
     logger.info(f"Fetching posts for user {user_id}")
     try:
@@ -64,3 +64,20 @@ async def get_user_posts(request: Request, session: AsyncSession = Depends(get_s
     except Exception as e:
         logger.error(f"Error fetching user posts: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
+@posts_router.delete("/delete-post/{short_key}")
+async def delete_post(
+        request: Request,
+        short_key: str,
+        background_tasks: BackgroundTasks,
+        session: AsyncSession = Depends(get_session),
+        user_id: int = Depends(get_current_user_id),
+):
+    try:
+        post = await delete_post_service(short_key, request, session, background_tasks)
+        logger.info(f"User {user_id} is deleting a post: {post}")
+        return {"message": "Post deleted successfully", "post": post}
+    except HTTPException as e:
+        logger.error(f"Error deleting post: {e}", exc_info=True)
+        raise e
+

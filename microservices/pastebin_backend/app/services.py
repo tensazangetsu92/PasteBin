@@ -5,10 +5,11 @@ import httpx
 from fastapi import HTTPException, Depends, BackgroundTasks, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from .postgresql.database import async_session
-from .redis.redis import get_post_and_incr_recent_views_in_cache, cache_post, get_popular_posts_keys, get_post_from_cache, \
-    increment_views_in_cache
-from .postgresql.crud import get_record_by_short_key, get_records_by_user_id
-from .yandex_bucket.storage import get_file_from_bucket
+from .redis.redis import get_post_and_incr_recent_views_in_cache, cache_post, get_popular_posts_keys, \
+    get_post_from_cache, \
+    increment_views_in_cache, delete_post_from_cache
+from .postgresql.crud import get_record_by_short_key, get_records_by_user_id, delete_record_by_short_key
+from .yandex_bucket.storage import get_file_from_bucket, delete_file_from_bucket
 from .utils import convert_to_kilobytes, get_post_age
 from .config import settings
 from .postgresql.crud import create_record
@@ -117,7 +118,6 @@ async def get_popular_posts_service(request, session: AsyncSession):
     posts = await asyncio.gather(*(fetch_post(short_key) for short_key in keys))
     return {"posts": posts}
 
-
 async def get_user_posts_service(request: Request, session: AsyncSession, user_id: int):
     """Получить список постов текущего пользователя."""
     posts = await get_records_by_user_id(session, user_id)
@@ -133,4 +133,19 @@ async def get_user_posts_service(request: Request, session: AsyncSession, user_i
         for post in posts
     ]
     return response
+
+async def delete_post_service(
+        short_key: str,
+        request: Request,
+        session: AsyncSession,
+        background_tasks: BackgroundTasks
+):
+    """Удаляет пост с указанным short_key."""
+    post = await delete_record_by_short_key(session, short_key)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    background_tasks.add_task(delete_file_from_bucket,settings.BUCKET_NAME, post.author_id, short_key)
+    background_tasks.add_task(delete_post_from_cache,request.app.state.redis, post.short_key, settings.SORTED_SET_RECENT_VIEWS)
+    return post
+
 
