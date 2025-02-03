@@ -34,7 +34,7 @@ async def login_user_service(user: UserLogin, session: AsyncSession, response: R
     )
     return {"access_token" : access_token, "token_type": "bearer"}
 
-async def get_current_user(request: Request, session: AsyncSession):
+async def get_current_user_service(request: Request, session: AsyncSession):
     user_id = get_current_user_id(request)
     user_data = await get_user_by_id(session, user_id)
     response = {
@@ -42,3 +42,4 @@ async def get_current_user(request: Request, session: AsyncSession):
         "email": user_data.email,
     }
     return response
+

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
 from starlette import status
 from .auth_schemas import UserResponse, UserCreate, UserLogin
-from .auth_services import register_user_service, login_user_service, get_current_user
+from .auth_services import register_user_service, login_user_service, get_current_user_service
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..postgresql.database import get_session
 from ..logger import logger
@@ -37,10 +37,10 @@ async def login(response: Response, user: UserLogin, session: AsyncSession = Dep
         )
 
 @auth_router.get("/get-current-user")
-async def get_current_user_route(request: Request, session: AsyncSession = Depends(get_session)):
+async def get_current_user_routest(request: Request, session: AsyncSession = Depends(get_session)):
     logger.info(f"Fetching current user for request {request.client.host}")
     try:
-        result = await get_current_user(request, session)
+        result = await get_current_user_service(request, session)
         logger.info(f"Current user retrieved: {result}")
         return result
     except Exception as e:
@@ -49,3 +49,18 @@ async def get_current_user_route(request: Request, session: AsyncSession = Depen
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
         )
+
+@auth_router.post("/logout")
+async def logout(response: Response):
+    logger.info(f"Logging out user")
+    try:
+        response.delete_cookie("access_token")  # Удаляем куки с токеном
+        logger.info(f"User logged out successfully")
+        return {"detail": "Logged out successfully"}
+    except Exception as e:
+        logger.error(f"Logout error: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+
