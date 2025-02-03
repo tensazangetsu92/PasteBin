@@ -142,7 +142,7 @@ function HomePage() {
       </div>
 
       <div style={{ display: 'flex' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', margin: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', margin: '20px', backgroundColor: '#f9f9f9', padding: '10px' }}>
           <textarea
             placeholder="Введите текст поста..."
             value={postContent}
