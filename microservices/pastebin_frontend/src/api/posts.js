@@ -18,6 +18,15 @@ export const addPost = async (postData) => {
   }
 };
 
+export const deletePost = async (shortKey) => {
+  try {
+    const response = await apiClient.delete(`/delete-post/${shortKey}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.detail || 'Ошибка при удалении поста');
+  }
+};
+
 export const getPopularPosts = async () => {
   try {
     const response = await apiClient.get(`/get-popular-posts`);

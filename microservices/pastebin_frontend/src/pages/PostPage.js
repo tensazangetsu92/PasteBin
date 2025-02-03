@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getPostByShortKey } from '../api/posts';
+import { getPostByShortKey, deletePost } from '../api/posts';
 
 function PostPage() {
   const { shortKey } = useParams();
@@ -11,7 +11,7 @@ function PostPage() {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        console.log(shortKey)
+        console.log(shortKey);
         const postData = await getPostByShortKey(shortKey);
         setPost(postData);
       } catch (err) {
@@ -20,7 +20,16 @@ function PostPage() {
     };
 
     fetchPost();
-  }, [shortKey, navigate]);
+  }, [shortKey]);
+
+  const handleDelete = async () => {
+    try {
+      await deletePost(shortKey);
+      navigate('/'); // Перенос на главную страницу после удаления
+    } catch (err) {
+      setError(`Ошибка при удалении поста: ${err.message}`);
+    }
+  };
 
   if (error) return <p>{error}</p>;
   if (!post) return <p>Загрузка...</p>;
@@ -32,10 +41,16 @@ function PostPage() {
       {post.expires_at && (
         <p><strong>Истекает:</strong> {new Date(post.expires_at).toLocaleString()}</p>
       )}
-      <p><strong>Просмотров:</strong> {post.views}</p> {/* Добавлено количество просмотров */}
+      <p><strong>Просмотров:</strong> {post.views}</p>
       <div style={{ marginTop: '20px', whiteSpace: 'pre-wrap' }}>
         {post.text}
       </div>
+      <button
+        onClick={handleDelete}
+        style={{ marginTop: '20px', padding: '10px', background: 'red', color: 'white', border: 'none', cursor: 'pointer' }}
+      >
+        Удалить пост
+      </button>
     </div>
   );
 }
