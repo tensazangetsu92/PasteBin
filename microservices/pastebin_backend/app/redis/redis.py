@@ -43,7 +43,6 @@ async def get_post_from_cache(redis: Redis, short_key: str):
         return post_data
     return None
 
-
 async def delete_post_from_cache(redis: Redis, short_key: str, sorted_set: str):
     """Удаляет пост по short_key из кэша Redis с использованием pipeline."""
     async with redis.pipeline() as pipe:

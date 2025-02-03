@@ -106,6 +106,7 @@ async def get_popular_posts_service(request, session: AsyncSession):
         else:
             async with async_session() as new_session:
                 text_record = await get_record_by_short_key(new_session, short_key)
+                if not text_record: return None
                 file_data = await get_file_from_bucket(text_record.blob_url)
                 creation_time = get_post_age(text_record.created_at)
                 return {
@@ -116,6 +117,7 @@ async def get_popular_posts_service(request, session: AsyncSession):
                     "expires_at": text_record.expires_at,
                 }
     posts = await asyncio.gather(*(fetch_post(short_key) for short_key in keys))
+    posts = [post for post in posts if post]
     return {"posts": posts}
 
 async def get_user_posts_service(request: Request, session: AsyncSession, user_id: int):
@@ -141,11 +143,11 @@ async def delete_post_service(
         background_tasks: BackgroundTasks
 ):
     """Удаляет пост с указанным short_key."""
+    background_tasks.add_task(delete_post_from_cache,request.app.state.redis, short_key, settings.SORTED_SET_RECENT_VIEWS)
     post = await delete_record_by_short_key(session, short_key)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     background_tasks.add_task(delete_file_from_bucket,settings.BUCKET_NAME, post.author_id, short_key)
-    background_tasks.add_task(delete_post_from_cache,request.app.state.redis, post.short_key, settings.SORTED_SET_RECENT_VIEWS)
     return post
 
 
