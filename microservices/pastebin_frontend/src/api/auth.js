@@ -19,6 +19,15 @@ export const loginUser = async (userData) => {
   }
 };
 
+export const logoutUser = async () => {
+  try {
+    const response = await apiClient.post(`/logout`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.detail || 'Ошибка выхода из аккаунта');
+  }
+}
+
 export const getCurrentUser = async () => {
   try {
     const response = await apiClient.get('/get-current-user'); // Запрос на сервер для получения текущего пользователя

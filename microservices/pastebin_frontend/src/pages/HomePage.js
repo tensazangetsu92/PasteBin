@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { addPost, getPopularPosts, getUserPosts } from '../api/posts';
 import { Link, useNavigate } from 'react-router-dom';
-import { getCurrentUser } from '../api/auth';
+import { getCurrentUser, logoutUser } from '../api/auth';
 
 function HomePage() {
   const [postName, setPostName] = useState('');
@@ -36,7 +36,6 @@ function HomePage() {
     setCurrentUser(null);
   }
 };
-
 
 
   useEffect(() => {
@@ -97,6 +96,18 @@ function HomePage() {
     }
   };
 
+  const handleLogout = async () => {
+  try {
+    await logoutUser();
+//    localStorage.removeItem('access_token');
+    setCurrentUser(null);
+    window.location.reload();
+  } catch (error) {
+    console.error('Ошибка при выходе из аккаунта:', error);
+  }
+};
+
+
   return (
     <>
       <div
@@ -116,10 +127,7 @@ function HomePage() {
             <div>
               <span>{currentUser.username}</span> {/* Отображаем имя пользователя */}
               <button
-                onClick={() => {
-                  localStorage.removeItem('access_token'); // Удаляем токен
-                  setCurrentUser(null); // Сбрасываем состояние
-                }}
+                onClick={handleLogout}
                 style={{ marginLeft: '10px', padding: '8px 16px' }}
               >
                 Выйти
@@ -173,6 +181,8 @@ function HomePage() {
           </button>
         </div>
 
+
+
         <div style={{ flex: 1, margin: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
           <h2>Популярные посты</h2>
           {popularPosts && popularPosts.posts ? (
@@ -199,12 +209,12 @@ function HomePage() {
         </div>
       </div>
 
-      <div style={{ margin: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
-      <h2>Мои посты</h2>
-      {userPosts.length === 0 ? (
-        <p>У вас пока нет постов.</p>
-      ) : (
-        <ul>
+
+
+      <div>
+      {currentUser && userPosts.length > 0 && (
+        <ul style={{  margin: '20px', padding: '10px', borderRadius: '8px', backgroundColor: '#f9f9f9' }}>
+          <h2>Мои посты</h2>
           {userPosts.map((post) => (
             <li key={post.id} style={{ marginBottom: '10px' }}>
               <Link to={`/${post.short_key}`}>
