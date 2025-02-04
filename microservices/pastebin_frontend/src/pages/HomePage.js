@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { addPost, getPopularPosts, getUserPosts } from '../api/posts';
-import { Link } from 'react-router-dom';
 import { getCurrentUser } from '../api/auth';
 
 function HomePage() {
@@ -8,78 +7,37 @@ function HomePage() {
   const [postContent, setPostContent] = useState('');
   const [expiresAt, setExpiresAt] = useState('never');
   const [responseMessage, setResponseMessage] = useState('');
-  const [popularPosts, setPopularPosts] = useState([]);
-  const [userPosts, setUserPosts] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
 
   const expirationOptions = {
     never: null,
-    'burn after read': 0,
     '10 minutes': 10 * 60,
     '1 hour': 60 * 60,
     '1 day': 24 * 60 * 60,
     '1 week': 7 * 24 * 60 * 60,
-    '2 weeks': 14 * 24 * 60 * 60,
-    '1 month': 30 * 24 * 60 * 60,
-    '6 months': 180 * 24 * 60 * 60,
-    '1 year': 365 * 24 * 60 * 60,
   };
 
-  // Функция для получения данных о текущем пользователе
-  const fetchCurrentUser = async () => {
-  try {
-    const userData = await getCurrentUser(); // Получаем данные пользователя
-    setCurrentUser(userData);
-  } catch (error) {
-    console.error('Ошибка при получении пользователя:', error);
-    setCurrentUser(null);
-  }
-};
-
-
   useEffect(() => {
-    const fetchPopularPosts = async () => {
+    const fetchUserData = async () => {
       try {
-        const posts = await getPopularPosts();
-        setPopularPosts(posts);
-      } catch (error) {
-        setResponseMessage(`Ошибка при получении популярных постов: ${error.message}`);
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+      } catch {
+        setCurrentUser(null);
       }
     };
-
-    fetchPopularPosts();
-    fetchCurrentUser(); // Получаем данные о текущем пользователе
+    fetchUserData();
   }, []);
-
-  useEffect(() => {
-    const fetchUserPosts = async () => {
-  try {
-    if (currentUser) {
-      const posts = await getUserPosts();
-      setUserPosts(posts);
-    }
-  } catch (error) {
-    console.error('Ошибка при загрузке постов пользователя:', error);
-  }
-};
-
-  if (currentUser) {
-    fetchUserPosts(); // Загружаем посты после получения данных о пользователе
-  }
-}, [currentUser]);
 
   const handleSubmit = async () => {
     if (!postContent.trim()) {
       setResponseMessage('Пост не может быть пустым.');
       return;
     }
-
     const selectedExpiration = expirationOptions[expiresAt];
-    const expirationDate =
-      selectedExpiration === null
-        ? null
-        : new Date(Date.now() + selectedExpiration * 1000).toISOString();
-
+    const expirationDate = selectedExpiration
+      ? new Date(Date.now() + selectedExpiration * 1000).toISOString()
+      : null;
     try {
       await addPost({
         name: postName || 'Untitled',
@@ -95,94 +53,39 @@ function HomePage() {
     }
   };
 
-
-
   return (
-    <>
-      <div style={{ display: 'flex'}}>
-        <div style={{ width: '60%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', margin: '20px', backgroundColor: '#f9f9f9', padding: '30px' }}>
-          <textarea
-            placeholder="Введите текст поста..."
-            value={postContent}
-            onChange={(e) => setPostContent(e.target.value)}
-            rows="5"
-            style={{ width: '95%', height: '240px', marginBottom: '10px', padding: '8px', resize: 'none' }}
-          />
-          <input
-            type="text"
-            placeholder="Введите название поста..."
-            value={postName}
-            onChange={(e) => setPostName(e.target.value)}
-            style={{ width: '200px', marginBottom: '10px', padding: '8px' }}
-          />
-          <select
-            value={expiresAt}
-            onChange={(e) => setExpiresAt(e.target.value)}
-            style={{ width: '200px', marginBottom: '10px', padding: '8px' }}
-          >
-            {Object.keys(expirationOptions).map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-          <button onClick={handleSubmit} style={{ padding: '10px 20px' }}>
-            Добавить
-          </button>
-        </div>
-
-
-        <div style={{ width: '30%' }}>
-          {/* Популярные посты */}
-          <div style={{ flex: 1, margin: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
-            <h2>Популярные посты</h2>
-            {popularPosts && popularPosts.posts ? (
-              popularPosts.posts.length === 0 ? (
-                <p>Загрузка популярных постов...</p>
-              ) : (
-                <ul>
-                  {popularPosts.posts.map((post, index) => (
-                    <li key={index} style={{ marginBottom: '10px' }}>
-                      <Link to={`/${post.short_key}`}>
-                        <strong>{post.name}</strong>
-                      </Link>
-                      <br />
-                      Размер текста: {post.text_size_kilobytes} KB
-                      <br />
-                      Создан: {post.created_at}
-                    </li>
-                  ))}
-                </ul>
-              )
-            ) : (
-              <p>Загрузка популярных постов...</p>
-            )}
-          </div>
-
-          {/* Мои посты */}
-          {currentUser && userPosts.length > 0 && (
-            <div style={{ flex: 1, margin: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
-              <h2>Мои посты</h2>
-              <ul>
-                {userPosts.map((post) => (
-                  <li key={post.id} style={{ marginBottom: '10px' }}>
-                    <Link to={`/${post.short_key}`}>
-                      <strong>{post.name}</strong>
-                    </Link>
-                    <br />
-                    Просмотры: {post.views}
-                    <br />
-                    Создан: {post.created_at}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-      </div>
-
-    </>
+    <div style={{ width: '60%', margin: '20px', padding: '10px', display: 'flex', flexDirection: 'column' }}>
+      <textarea
+        placeholder="Введите текст поста..."
+        value={postContent}
+        onChange={(e) => setPostContent(e.target.value)}
+        rows="5"
+        style={{ width: '95%', height: '240px', marginBottom: '10px', padding: '8px', resize: 'none', backgroundColor: '#2b2b2b', radiusColor: '#333333', outline: 'none',
+         border: '1px solid #333333' }}
+      />
+      <input
+        type="text"
+        placeholder="Введите название поста..."
+        value={postName}
+        onChange={(e) => setPostName(e.target.value)}
+        style={{ width: '200px', marginBottom: '10px', padding: '8px', backgroundColor: '#2b2b2b', outline: 'none', border: '1px solid #333333' }}
+      />
+      <select
+        value={expiresAt}
+        onChange={(e) => setExpiresAt(e.target.value)}
+        style={{ width: '200px', marginBottom: '10px', padding: '8px', backgroundColor: '#2b2b2b', outline: 'none', border: '1px solid #333333', color: '#dddddd' }}
+      >
+        {Object.keys(expirationOptions).map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+      <button onClick={handleSubmit} style={{ padding: '10px 20px', backgroundColor: '#2b2b2b', color: '#f7f7ea',  cursor: 'pointer', border: '1px solid #333333' }}>
+        Добавить
+      </button>
+      {responseMessage && <p>{responseMessage}</p>}
+    </div>
   );
 }
 

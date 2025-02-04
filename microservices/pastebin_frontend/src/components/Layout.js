@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { getPopularPosts, getUserPosts } from '../api/posts';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCurrentUser, logoutUser } from '../api/auth';
 
 function Layout({ children }) {
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = React.useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [popularPosts, setPopularPosts] = useState([]);
+  const [userPosts, setUserPosts] = useState([]);
 
-  React.useEffect(() => {
-    const fetchUser = async () => {
+  useEffect(() => {
+    const fetchUserData = async () => {
       try {
         const user = await getCurrentUser();
         setCurrentUser(user);
@@ -15,8 +18,34 @@ function Layout({ children }) {
         setCurrentUser(null);
       }
     };
-    fetchUser();
+
+    const fetchPopularPosts = async () => {
+      try {
+        const posts = await getPopularPosts();
+        setPopularPosts(posts);
+      } catch (error) {
+        console.error('Ошибка при получении популярных постов:', error);
+      }
+    };
+
+    fetchUserData();
+    fetchPopularPosts();
   }, []);
+
+  useEffect(() => {
+    const fetchUserPosts = async () => {
+      if (currentUser) {
+        try {
+          const posts = await getUserPosts();
+          setUserPosts(posts);
+        } catch (error) {
+          console.error('Ошибка загрузки постов пользователя:', error);
+        }
+      }
+    };
+
+    fetchUserPosts();
+  }, [currentUser]);
 
   const handleLogout = async () => {
     try {
@@ -30,18 +59,13 @@ function Layout({ children }) {
 
   return (
     <>
+      <div style={{ backgroundColor: '#2b2b2b'}}>
+
       {/* Верхняя панель */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '10px 20px',
-        backgroundColor: '#f5f5f5',
-        borderRadius: '8px',
-      }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', backgroundColor: '#2a2a2a', borderRadius: '8px' }}>
         <h1 style={{ margin: 0 }}>
-          <Link to={`/`} style={{ color: 'black', textDecoration: 'none' }}>
-            <strong>PasteBin</strong>
+          <Link to="/" style={{ color: 'black', textDecoration: 'none' }}>
+            <strong style={{ color: '#ffffff'}}>PasteBin</strong>
           </Link>
         </h1>
         <div>
@@ -66,8 +90,57 @@ function Layout({ children }) {
       </div>
 
       {/* Контент страницы */}
-      <div style={{ padding: '20px', marginRight: '10%', marginLeft: '10%'  }}>
-        {children}
+      <div style={{ padding: '20px', marginRight: '10%', marginLeft: '10%', display: 'flex' , backgroundColor: '#252525'}}>
+        <div style={{ width: '70%' }}>{children}</div>
+        <div style={{ width: '30%' }}>
+          {/* Популярные посты */}
+          <div style={{ flex: 1, margin: '20px', padding: '10px'}}>
+            <h2 style={{ color: '#dddddd' }}>Популярные посты</h2>
+            {popularPosts && popularPosts.posts ? (
+              popularPosts.posts.length === 0 ? (
+                <p>Загрузка популярных постов...</p>
+              ) : (
+                <ul>
+                  {popularPosts.posts.map((post, index) => (
+                    <li key={index} style={{ marginBottom: '10px', color: '#999999' }}>
+                      <Link to={`/${post.short_key}`} style={{textDecoration: 'none'}}>
+                        <strong style={{ color: '#3a83d2'}}>{post.name}</strong>
+                      </Link>
+                      <br />
+                      Размер текста: {post.text_size_kilobytes} KB
+                      <br />
+                      Создан: {post.created_at}
+                    </li>
+                  ))}
+                </ul>
+              )
+            ) : (
+              <p>Загрузка популярных постов...</p>
+            )}
+          </div>
+
+          {/* Мои посты */}
+          {currentUser && userPosts.length > 0 && (
+            <div style={{ margin: '20px', padding: '10px'}}>
+              <h2 style = {{color: '#dddddd'}}>Мои посты</h2>
+              <ul>
+                {userPosts.map((post) => (
+                  <li key={post.id} style={{ marginBottom: '10px', color: '#999999' }}>
+                    <Link to={`/${post.short_key}`} style={{textDecoration: 'none'}}>
+                      <strong style={{ color: '#3a83d2'}}>{post.name}</strong>
+                    </Link>
+                    <br />
+                    Просмотры: {post.views}
+                    <br />
+                    Создан: {post.created_at}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+
       </div>
     </>
   );
