@@ -4,17 +4,20 @@ import HomePage from './pages/HomePage'; // Указан новый путь
 import PostPage from './pages/PostPage'; // Путь к компоненту PostPage
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
+import Layout from './components/Layout';
 
 
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/:shortKey" element={<PostPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/login" element={<LoginPage />} />
-      </Routes>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/:shortKey" element={<PostPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/login" element={<LoginPage />} />
+        </Routes>
+      </Layout>
     </Router>
   );
 }

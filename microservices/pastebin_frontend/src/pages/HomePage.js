@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { addPost, getPopularPosts, getUserPosts } from '../api/posts';
-import { Link, useNavigate } from 'react-router-dom';
-import { getCurrentUser, logoutUser } from '../api/auth';
+import { Link } from 'react-router-dom';
+import { getCurrentUser } from '../api/auth';
 
 function HomePage() {
   const [postName, setPostName] = useState('');
@@ -11,7 +11,6 @@ function HomePage() {
   const [popularPosts, setPopularPosts] = useState([]);
   const [userPosts, setUserPosts] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
-  const navigate = useNavigate();
 
   const expirationOptions = {
     never: null,
@@ -96,67 +95,18 @@ function HomePage() {
     }
   };
 
-  const handleLogout = async () => {
-  try {
-    await logoutUser();
-//    localStorage.removeItem('access_token');
-    setCurrentUser(null);
-    window.location.reload();
-  } catch (error) {
-    console.error('Ошибка при выходе из аккаунта:', error);
-  }
-};
 
 
   return (
     <>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px',
-          padding: '10px 20px',
-          backgroundColor: '#f5f5f5',
-          borderRadius: '8px',
-        }}
-      >
-        <h1 style={{ margin: 0 }}>PasteBin</h1>
-        <div>
-          {currentUser ? (
-            <div>
-              <span>{currentUser.username}</span> {/* Отображаем имя пользователя */}
-              <button
-                onClick={handleLogout}
-                style={{ marginLeft: '10px', padding: '8px 16px' }}
-              >
-                Выйти
-              </button>
-            </div>
-          ) : (
-            <>
-              <button
-                onClick={() => navigate('/login')}
-                style={{ marginRight: '10px', padding: '8px 16px' }}
-              >
-                Логин
-              </button>
-              <button onClick={() => navigate('/register')} style={{ padding: '8px 16px' }}>
-                Регистрация
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div style={{ display: 'flex' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', margin: '20px', backgroundColor: '#f9f9f9', padding: '10px' }}>
+      <div style={{ display: 'flex'}}>
+        <div style={{ width: '60%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', margin: '20px', backgroundColor: '#f9f9f9', padding: '30px' }}>
           <textarea
             placeholder="Введите текст поста..."
             value={postContent}
             onChange={(e) => setPostContent(e.target.value)}
             rows="5"
-            style={{ width: '1000px', height: '240px', marginBottom: '10px', padding: '8px' }}
+            style={{ width: '95%', height: '240px', marginBottom: '10px', padding: '8px', resize: 'none' }}
           />
           <input
             type="text"
@@ -182,54 +132,55 @@ function HomePage() {
         </div>
 
 
-
-        <div style={{ flex: 1, margin: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
-          <h2>Популярные посты</h2>
-          {popularPosts && popularPosts.posts ? (
-            popularPosts.posts.length === 0 ? (
-              <p>Загрузка популярных постов...</p>
+        <div style={{ width: '30%' }}>
+          {/* Популярные посты */}
+          <div style={{ flex: 1, margin: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+            <h2>Популярные посты</h2>
+            {popularPosts && popularPosts.posts ? (
+              popularPosts.posts.length === 0 ? (
+                <p>Загрузка популярных постов...</p>
+              ) : (
+                <ul>
+                  {popularPosts.posts.map((post, index) => (
+                    <li key={index} style={{ marginBottom: '10px' }}>
+                      <Link to={`/${post.short_key}`}>
+                        <strong>{post.name}</strong>
+                      </Link>
+                      <br />
+                      Размер текста: {post.text_size_kilobytes} KB
+                      <br />
+                      Создан: {post.created_at}
+                    </li>
+                  ))}
+                </ul>
+              )
             ) : (
+              <p>Загрузка популярных постов...</p>
+            )}
+          </div>
+
+          {/* Мои посты */}
+          {currentUser && userPosts.length > 0 && (
+            <div style={{ flex: 1, margin: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+              <h2>Мои посты</h2>
               <ul>
-                {popularPosts.posts.map((post, index) => (
-                  <li key={index} style={{ marginBottom: '10px' }}>
+                {userPosts.map((post) => (
+                  <li key={post.id} style={{ marginBottom: '10px' }}>
                     <Link to={`/${post.short_key}`}>
                       <strong>{post.name}</strong>
                     </Link>
                     <br />
-                    Размер текста: {post.text_size_kilobytes} KB
+                    Просмотры: {post.views}
                     <br />
                     Создан: {post.created_at}
                   </li>
                 ))}
               </ul>
-            )
-          ) : (
-            <p>Загрузка популярных постов...</p>
+            </div>
           )}
         </div>
+
       </div>
-
-
-
-      <div>
-      {currentUser && userPosts.length > 0 && (
-        <ul style={{  margin: '20px', padding: '10px', borderRadius: '8px', backgroundColor: '#f9f9f9' }}>
-          <h2>Мои посты</h2>
-          {userPosts.map((post) => (
-            <li key={post.id} style={{ marginBottom: '10px' }}>
-              <Link to={`/${post.short_key}`}>
-                <strong>{post.name}</strong>
-              </Link>
-              <br />
-              Просмотры: {post.views}
-              <br />
-              Создан: {post.created_at}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-
 
     </>
   );

@@ -47,7 +47,7 @@ function PostPage() {
       </div>
       <button
         onClick={handleDelete}
-        style={{ marginTop: '20px', padding: '30px', background: '#373737', color: 'white', borderRadius: '5px', cursor: 'pointer' }}
+        style={{ marginTop: '20px', padding: '30px', background: '#373737', color: 'white', borderRadius: '5px'}}
       >
         <strong>Удалить пост</strong>
       </button>
