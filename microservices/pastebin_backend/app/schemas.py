@@ -33,3 +33,19 @@ class PopularPostsResponse(BaseModel):
     posts: List[PostResponse]
 
 
+class PostUpdate(BaseModel):
+    name: Optional[str] = None
+    text: Optional[str] = None
+    expires_at: Optional[datetime] = None
+
+    @validator('expires_at', pre=True)
+    def parse_expires_at(cls, v):
+        # Если expires_at None, установить значение по умолчанию
+        if v is None:
+            return None
+        # Если значение в формате ISO, преобразовать в datetime
+        if isinstance(v, str):
+            v = v.replace("Z", "+00:00")
+            return datetime.fromisoformat(v)
+        return v  # В случае уже валидного datetime
+

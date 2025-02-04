@@ -4,6 +4,7 @@ from sqlalchemy import select, delete, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from microservices.pastebin_backend.app.postgresql.models import PostOrm, UserOrm
+from microservices.pastebin_backend.app.schemas import PostUpdate
 from microservices.pastebin_backend.app.yandex_bucket.storage import delete_file_from_bucket
 
 
@@ -36,6 +37,36 @@ async def get_record_by_short_key(session: AsyncSession, short_key: str):
     if post:
         post.views_count += 1
         await session.commit()
+    return post
+
+async def update_record(
+    session: AsyncSession,
+    short_key: str,
+    post_data: PostUpdate,
+    post: PostOrm
+):
+    """Обновить запись в базе данных."""
+
+    # Обновляем только те поля, которые были переданы
+    if post_data.name is not None:
+        post.name = post_data.name
+    if post_data.text is not None:
+        post.text = post_data.text
+    if post_data.expires_at is not None:
+        post.expires_at = post_data.expires_at
+
+    # Сохраняем изменения в базе данных
+    async with session.begin():
+        await session.execute(
+            update(PostOrm)
+            .where(PostOrm.short_key == short_key)
+            .values(
+                name=post.name,
+                text=post.text,
+            )
+        )
+    await session.commit()
+    await session.refresh(post)
     return post
 
 async def delete_record_by_short_key(session: AsyncSession, short_key: str):

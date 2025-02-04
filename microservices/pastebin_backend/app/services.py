@@ -8,13 +8,13 @@ from .postgresql.database import async_session
 from .redis.redis import get_post_and_incr_recent_views_in_cache, cache_post, get_popular_posts_keys, \
     get_post_from_cache, \
     increment_views_in_cache, delete_post_from_cache
-from .postgresql.crud import get_record_by_short_key, get_records_by_user_id, delete_record_by_short_key
+from .postgresql.crud import get_record_by_short_key, get_records_by_user_id, delete_record_by_short_key, update_record
 from .yandex_bucket.storage import get_file_from_bucket, delete_file_from_bucket
 from .utils import convert_to_kilobytes, get_post_age
 from .config import settings
 from .postgresql.crud import create_record
 from .yandex_bucket.storage import upload_file_to_bucket
-from .schemas import PostCreate
+from .schemas import PostCreate, PostUpdate
 
 
 async def get_hash() -> str:
@@ -149,5 +149,23 @@ async def delete_post_service(
         raise HTTPException(status_code=404, detail="Post not found")
     background_tasks.add_task(delete_file_from_bucket,settings.BUCKET_NAME, post.author_id, short_key)
     return post
+
+async def update_post_service(
+    short_key: str,
+    post_data: PostUpdate,
+    session: AsyncSession,
+    user_id: int
+):
+    post = await get_record_by_short_key(session, short_key)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    if post.author_id != user_id:
+        raise HTTPException(status_code=403, detail="You do not have permission to update this post")
+
+    updated_post = await update_record(session, short_key, post_data, post)
+    if not updated_post:
+        raise HTTPException(status_code=404, detail="Post not found after update")
+    return updated_post
+
 
 

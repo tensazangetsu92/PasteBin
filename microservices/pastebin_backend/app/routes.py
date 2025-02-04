@@ -6,9 +6,9 @@ from .services import (
     add_post_service,
     get_text_service,
     get_popular_posts_service,
-    get_user_posts_service, delete_post_service,
+    get_user_posts_service, delete_post_service, update_post_service,
 )
-from .schemas import PostCreate, PopularPostsResponse
+from .schemas import PostCreate, PopularPostsResponse, PostUpdate
 from .user_management.token_utils import get_current_user_id
 from .logger import logger
 
@@ -81,3 +81,21 @@ async def delete_post(
         logger.error(f"Error deleting post: {e}", exc_info=True)
         raise e
 
+
+@posts_router.patch("/update-post/{short_key}")
+async def update_post(
+        short_key: str,
+        post_data: PostUpdate,
+        db: AsyncSession = Depends(get_session),
+        user_id: int = Depends(get_current_user_id)
+):
+    logger.info(f"User {user_id} is updating a post: {short_key} with data: {post_data}")
+
+    try:
+        updated_post = await update_post_service(short_key, post_data, db, user_id)
+        logger.info(f"Post updated successfully: {updated_post}")
+        return {"message": "Post updated successfully", "post": updated_post}
+
+    except Exception as e:
+        logger.error(f"Error updating post {short_key}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal Server Error")
