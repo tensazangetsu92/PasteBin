@@ -36,13 +36,10 @@ async def add_post_service(
     current_user_id: int,
 ):
     """Добавление нового поста."""
-    file_obj = BytesIO(text_data.text.encode("utf-8"))
     short_key = await get_hash()
     while await get_record_by_short_key(db, short_key) is not None:
         short_key = await get_hash()
-    blob_url = await upload_file_to_bucket(
-        settings.BUCKET_NAME, current_user_id, short_key, file_obj
-    )
+    blob_url = await upload_file_to_bucket(settings.BUCKET_NAME, current_user_id, short_key, text_data.text)
     new_post = await create_record(
         session=db,
         object_name=text_data.name,
@@ -162,7 +159,15 @@ async def update_post_service(
     if post.author_id != user_id:
         raise HTTPException(status_code=403, detail="You do not have permission to update this post")
 
-    updated_post = await update_record(session, short_key, post_data, post)
+    if post_data.text is not None:
+        await upload_file_to_bucket(settings.BUCKET_NAME, user_id, short_key, post_data.text)
+
+    if post_data.name is not None:
+        post.name = post_data.name
+    if post_data.expires_at is not None:
+        post.expires_at = post_data.expires_at
+
+    updated_post = await update_record(session, short_key, post)
     if not updated_post:
         raise HTTPException(status_code=404, detail="Post not found after update")
     return updated_post

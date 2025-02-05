@@ -11,10 +11,15 @@ function HomePage() {
 
   const expirationOptions = {
     never: null,
+    'burn after read': 0,
     '10 minutes': 10 * 60,
     '1 hour': 60 * 60,
     '1 day': 24 * 60 * 60,
     '1 week': 7 * 24 * 60 * 60,
+    '2 weeks': 14 * 24 * 60 * 60,
+    '1 month': 30 * 24 * 60 * 60,
+    '6 months': 180 * 24 * 60 * 60,
+    '1 year': 365 * 24 * 60 * 60,
   };
 
   useEffect(() => {

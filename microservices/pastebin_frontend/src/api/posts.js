@@ -1,14 +1,5 @@
 import apiClient from './axiosConfig';
 
-export const getPostByShortKey = async (shortKey) => {
-  try {
-    const response = await apiClient.get(`/get-post/${shortKey}`);
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.detail || 'Не удалось получить пост');
-  }
-};
-
 export const addPost = async (postData) => {
   try {
     const response = await apiClient.post(`/add-post`, postData);
@@ -17,6 +8,27 @@ export const addPost = async (postData) => {
     throw new Error(error.response?.data?.detail || 'Неизвестная ошибка');
   }
 };
+
+
+export const getPost = async (shortKey) => {
+  try {
+    const response = await apiClient.get(`/get-post/${shortKey}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.detail || 'Не удалось получить пост');
+  }
+};
+
+export const updatePost = async (shortKey, postData) => {
+  try {
+    const response = await apiClient.patch(`/update-post/${shortKey}`, postData);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.detail || 'Не удалось обновить пост');
+  }
+}
+
+
 
 export const deletePost = async (shortKey) => {
   try {

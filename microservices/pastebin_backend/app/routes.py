@@ -90,7 +90,6 @@ async def update_post(
         user_id: int = Depends(get_current_user_id)
 ):
     logger.info(f"User {user_id} is updating a post: {short_key} with data: {post_data}")
-
     try:
         updated_post = await update_post_service(short_key, post_data, db, user_id)
         logger.info(f"Post updated successfully: {updated_post}")

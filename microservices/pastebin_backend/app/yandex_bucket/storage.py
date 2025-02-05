@@ -1,3 +1,4 @@
+from io import BytesIO
 from typing import BinaryIO
 import boto3
 from botocore.exceptions import ClientError
@@ -12,9 +13,10 @@ s3_client = boto3.client(
     aws_secret_access_key=settings.BUCKET_SECRET_KEY,
 )
 
-async def upload_file_to_bucket(bucket_name: str, author_id: int, short_key: str, file_obj: BinaryIO):
+async def upload_file_to_bucket(bucket_name: str, author_id: int, short_key: str, text: str):
     """Загрузка файла в Yandex Object Storage."""
     try:
+        file_obj = BytesIO(text.encode("utf-8"))
         object_url_in_bucket = f"{author_id}/{short_key}.txt"
         s3_client.upload_fileobj(file_obj, bucket_name, object_url_in_bucket)
         return f"https://storage.yandexcloud.net/{bucket_name}/{object_url_in_bucket}"

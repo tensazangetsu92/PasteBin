@@ -25,7 +25,7 @@ function LoginPage() {
 
   return (
     <div>
-      <h1>Вход</h1>
+      <h1 style={{color: '#dddddd'}}>Вход</h1>
       <input
         type="text"
         placeholder="Введите имя пользователя"

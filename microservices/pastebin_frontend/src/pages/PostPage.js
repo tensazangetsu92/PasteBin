@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getPostByShortKey, deletePost } from '../api/posts';
+import { getPost, deletePost } from '../api/posts';
 
 function PostPage() {
   const { shortKey } = useParams();
@@ -12,7 +12,7 @@ function PostPage() {
     const fetchPost = async () => {
       try {
         console.log(shortKey);
-        const postData = await getPostByShortKey(shortKey);
+        const postData = await getPost(shortKey);
         setPost(postData);
       } catch (err) {
         setError(`Ошибка загрузки поста: ${err.message}`);
@@ -35,7 +35,7 @@ function PostPage() {
   if (!post) return <p>Загрузка...</p>;
 
   return (
-    <div style={{ padding: '20px', fontSize: '20px' }}>
+    <div style={{ padding: '20px', fontSize: '20px', color: '#dddddd' }}>
       <h1>{post.name}</h1>
       <p><strong>Дата создания:</strong> {new Date(post.created_at).toLocaleString()}</p>
       {post.expires_at && (
@@ -47,10 +47,18 @@ function PostPage() {
       </div>
       <button
         onClick={handleDelete}
-        style={{ marginTop: '20px', padding: '30px', background: '#373737', color: 'white', borderRadius: '5px'}}
+        style={{ marginTop: '20px', padding: '30px', background: '#373737', color: 'white', borderRadius: '5px', cursor: 'pointer', border: '1px solid #333333'}}
       >
         <strong>Удалить пост</strong>
       </button>
+
+    <button
+      onClick={() => navigate(`/edit/${shortKey}`)}
+      style={{ marginTop: '20px', padding: '30px', background: '#555555', color: 'white', borderRadius: '5px', cursor: 'pointer', border: '1px solid #333333', marginRight: '10px' }}
+    >
+      <strong >Редактировать пост</strong>
+    </button>
+
     </div>
   );
 }
