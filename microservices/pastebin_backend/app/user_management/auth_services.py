@@ -12,12 +12,12 @@ from microservices.pastebin_backend.app.user_management.auth_schemas import User
 
 async def register_user_service(user: UserCreate, session: AsyncSession) -> UserResponse:
     """Сервис для регистрации нового пользователя."""
-    existing_user = await get_user_by_email(session, user.email)
+    existing_user = await get_user_by_email(session, str(user.email))
     if existing_user:
         raise HTTPException(status_code=400, detail="Email уже зарегистрирован")
     hashed_password = hash_password(user.password)
-    new_user = await create_user(session, user.username, user.email, hashed_password)
-    return UserResponse.from_orm(new_user)
+    new_user = await create_user(session, user.username, str(user.email), hashed_password)
+    return UserResponse.model_validate(new_user)
 
 async def login_user_service(user: UserLogin, session: AsyncSession, response: Response):
     db_user = await get_user_by_username(session, user.username)

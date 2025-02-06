@@ -7,7 +7,7 @@ from redis.asyncio import Redis
 from microservices.pastebin_backend.app.config import settings
 
 
-async def connect_to_redis() -> redis.Redis:
+async def connect_to_redis():
     """Подключение к Redis."""
     try:
         redis_client = redis.Redis(
@@ -29,13 +29,13 @@ async def disconnect_from_redis(redis_client: redis.Redis):
         await redis_client.close()
 
 
-async def cache_post(redis: Redis, short_key: str, post_data: dict, ttl: int = 10):
+async def cache_post(redis_client: Redis, short_key: str, post_data: dict, ttl: int = 10):
     post_data["created_at"] = post_data["created_at"].isoformat()
     post_data["expires_at"] = post_data["expires_at"].isoformat()
-    await redis.set(f"popular_post:{short_key}", json.dumps(post_data), ex=ttl)
+    await redis_client.set(f"popular_post:{short_key}", json.dumps(post_data), ex=ttl)
 
-async def get_post_from_cache(redis: Redis, short_key: str):
-    cached_data = await redis.get(f"popular_post:{short_key}")
+async def get_post_from_cache(redis_client: Redis, short_key: str):
+    cached_data = await redis_client.get(f"popular_post:{short_key}")
     if cached_data:
         post_data = json.loads(cached_data)
         post_data["created_at"] = datetime.fromisoformat(post_data["created_at"])
@@ -43,36 +43,36 @@ async def get_post_from_cache(redis: Redis, short_key: str):
         return post_data
     return None
 
-async def update_cache(redis: Redis, short_key: str, updated_data: dict, ttl: int = 10):
+async def update_cache(redis_client: Redis, short_key: str, updated_data: dict, ttl: int = 10):
     """Обновляет пост в кэше Redis."""
-    existing_post = await get_post_from_cache(redis, short_key)
+    existing_post = await get_post_from_cache(redis_client, short_key)
     if existing_post:
         existing_post.update(updated_data)  # Обновляем данные
         existing_post["created_at"] = existing_post["created_at"].isoformat()
         existing_post["expires_at"] = existing_post["expires_at"].isoformat()
-        await redis.set(f"popular_post:{short_key}", json.dumps(existing_post), ex=ttl)
+        await redis_client.set(f"popular_post:{short_key}", json.dumps(existing_post), ex=ttl)
 
-async def delete_post_from_cache(redis: Redis, short_key: str, sorted_set: str):
+async def delete_post_from_cache(redis_client: Redis, short_key: str, sorted_set: str):
     """Удаляет пост по short_key из кэша Redis с использованием pipeline."""
-    async with redis.pipeline() as pipe:
+    async with redis_client.pipeline() as pipe:
         pipe.delete(f"popular_post:{short_key}")
         pipe.delete(f"views:{short_key}")
         pipe.zrem(sorted_set, short_key)
         await pipe.execute()
 
-async def increment_views_in_cache(redis: Redis, short_key: str):
-    return await redis.incr(f"views:{short_key}")
+async def increment_views_in_cache(redis_client: Redis, short_key: str):
+    return await redis_client.incr(f"views:{short_key}")
 
-async def get_popular_posts_keys(redis: Redis, sorted_set: str, top_n: int = 20, limit: int = 5):
+async def get_popular_posts_keys(redis_client: Redis, sorted_set: str, top_n: int = 20, limit: int = 5):
     """Получить случайные limit постов из top_n самых популярных."""
-    popular_posts = await redis.zrevrange(sorted_set, 0, top_n - 1, withscores=False)
+    popular_posts = await redis_client.zrevrange(sorted_set, 0, top_n - 1, withscores=False)
     # Выбираем 5 случайных из 20
     selected_posts = random.sample(popular_posts, min(limit, len(popular_posts)))
     return selected_posts
 
-async def get_post_and_incr_recent_views_in_cache(redis: Redis, short_key: str, sorted_set: str):
+async def get_post_and_incr_recent_views_in_cache(redis_client: Redis, short_key: str, sorted_set: str):
     """Получить пост из кэша, увеличить счетчик просмотров и вернуть количество просмотров."""
-    async with redis.pipeline() as pipe:
+    async with redis_client.pipeline() as pipe:
         pipe.zincrby(sorted_set, 1, short_key)
         pipe.expire(sorted_set, settings.TTL_VIEWS)
         pipe.zscore(sorted_set, short_key)
@@ -82,30 +82,30 @@ async def get_post_and_incr_recent_views_in_cache(redis: Redis, short_key: str, 
         cached_post = results[3]  # Кэшированные данные поста
     return cached_post, views
 
-async def get_all_views_from_cache(redis) -> Dict[str, int]:
+async def get_all_views_from_cache(redis_client) -> Dict[str, int]:
     """Получает все просмотры из кеша."""
-    keys = await redis.keys("views:*")
+    keys = await redis_client.keys("views:*")
     views = {}
     for key in keys:
         post_id = key.split(":")[1]
-        count = await redis.get(key)
+        count = await redis_client.get(key)
         if count:
             views[post_id] = int(count)
     return views
 
-async def clear_views_from_cache(redis, post_ids):
+async def clear_views_from_cache(redis_client, post_ids):
     keys = [f"views:{post_id}" for post_id in post_ids]
     if keys:
-        await redis.delete(*keys)
+        await redis_client.delete(*keys)
 
 
-async def get_all_keys_sorted_set(redis: Redis, sorted_set: str):
-    keys = await redis.zrange(sorted_set, 0, -1, withscores=True)
+async def get_all_keys_sorted_set(redis_client: Redis, sorted_set: str):
+    keys = await redis_client.zrange(sorted_set, 0, -1, withscores=True)
     return keys
 
-async def delete_key_sorted_set(redis: Redis, sorted_set: str, short_key: str):
-    await redis.zrem(sorted_set, short_key)
+async def delete_key_sorted_set(redis_client: Redis, sorted_set: str, short_key: str):
+    await redis_client.zrem(sorted_set, short_key)
 
-async def update_score_sorted_set(redis: Redis, sorted_set: str, short_key: str, score: int):
-    await redis.zadd(sorted_set, {short_key: score})
+async def update_score_sorted_set(redis_client: Redis, sorted_set: str, short_key: str, score: int):
+    await redis_client.zadd(sorted_set, {short_key: score})
 

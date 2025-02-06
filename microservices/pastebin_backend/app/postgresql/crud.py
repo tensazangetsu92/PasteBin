@@ -70,7 +70,7 @@ async def get_records_by_user_id(session: AsyncSession, user_id: int):
 
 async def get_expired_records_from_db(session: AsyncSession):
     """Удаляет записи с истекшим сроком действия из базы данных."""
-    now = datetime.utcnow()
+    now = datetime.now()
     async with session.begin():
         expired_records = await session.execute(
             select(PostOrm).where(PostOrm.expires_at < now)

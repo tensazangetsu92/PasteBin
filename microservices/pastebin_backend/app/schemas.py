@@ -1,4 +1,4 @@
-from pydantic import BaseModel, HttpUrl, validator, EmailStr
+from pydantic import BaseModel, HttpUrl, validator, EmailStr, field_validator
 from typing import Optional, List
 from datetime import datetime
 
@@ -7,8 +7,8 @@ class PostCreate(BaseModel):
     text: str = "Some text"
     expires_at: datetime
 
-    @validator('expires_at', pre=True)
-    def parse_expires_at(cls, v):
+    @field_validator('expires_at', mode='before')
+    def parse_expires_at(self, v):
         # Если expires_at None, установить значение по умолчанию
         if v is None:
             return datetime(2040, 12, 30, 14, 1, 49, 746000)
@@ -38,8 +38,8 @@ class PostUpdate(BaseModel):
     text: Optional[str] = None
     expires_at: Optional[datetime] = None
 
-    @validator('expires_at', pre=True)
-    def parse_expires_at(cls, v):
+    @field_validator('expires_at', mode='before')
+    def parse_expires_at(self, v):
         # Если expires_at None, установить значение по умолчанию
         if v is None:
             return None

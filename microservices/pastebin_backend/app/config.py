@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     DECREMENT_RECENT_VIEWS_INTERVAL: int
 
     @property
-    def DATABASE_URL_asyncpg(self):
+    def database_url_asyncpg(self):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     model_config = SettingsConfigDict(env_file=os.path.join(os.path.dirname(__file__), '..', '.env'))

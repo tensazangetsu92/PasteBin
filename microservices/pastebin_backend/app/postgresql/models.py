@@ -11,7 +11,7 @@ class PostOrm(Base):
     blob_url: Mapped[str] = mapped_column(String, nullable=False)
     short_key: Mapped[str] = mapped_column(String(8), unique=True, nullable=False)
     author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=datetime.now)
     expires_at: Mapped[DateTime | None] = mapped_column(DateTime, nullable=True)
     views_count: Mapped[int] = mapped_column(Integer, default=0)
     likes_count: Mapped[int] = mapped_column(Integer, default=0)

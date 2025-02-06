@@ -4,7 +4,7 @@ from microservices.pastebin_backend.app.config import settings
 
 
 engine = create_async_engine(
-    url=settings.DATABASE_URL_asyncpg,
+    url=settings.database_url_asyncpg,
     echo=False,
 )
 

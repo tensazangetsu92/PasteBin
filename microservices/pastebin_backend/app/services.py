@@ -1,13 +1,10 @@
-from io import BytesIO
 import json
 import asyncio
-import httpx
-from fastapi import HTTPException, Depends, BackgroundTasks, Request
+from fastapi import HTTPException, BackgroundTasks, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from .postgresql.database import async_session
 from .redis.redis import get_post_and_incr_recent_views_in_cache, cache_post, get_popular_posts_keys, \
-    get_post_from_cache, \
-    increment_views_in_cache, delete_post_from_cache, update_cache
+    get_post_from_cache, increment_views_in_cache, delete_post_from_cache, update_cache
 from .postgresql.crud import get_record_by_short_key, get_records_by_user_id, delete_record_by_short_key, update_record
 from .yandex_bucket.storage import get_file_from_bucket, delete_file_from_bucket
 from .utils import convert_to_kilobytes, get_post_age
@@ -15,20 +12,8 @@ from .config import settings
 from .postgresql.crud import create_record
 from .yandex_bucket.storage import upload_file_to_bucket
 from .schemas import PostCreate, PostUpdate
+from .utils import get_hash
 
-
-async def get_hash() -> str:
-    """Получение хэша от хэш-сервера через HTTP-запрос."""
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(settings.HASH_SERVER_URL)
-            if response.status_code == 200:
-                data = response.json()
-                if "hash" in data:
-                    return data["hash"]
-            raise ValueError("Failed to fetch hash from hash server")
-    except httpx.RequestError as req_err:
-        raise HTTPException(503, f"Failed to fetch hash from hash server: {req_err}")
 
 async def add_post_service(
     text_data: PostCreate,
@@ -84,7 +69,7 @@ async def get_text_service(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving text: {e}")
 
-async def get_popular_posts_service(request, session: AsyncSession):
+async def get_popular_posts_service(request):
     """Получение популярных постов."""
     redis = request.app.state.redis
     keys = await get_popular_posts_keys(redis, settings.SORTED_SET_RECENT_VIEWS)
@@ -117,7 +102,7 @@ async def get_popular_posts_service(request, session: AsyncSession):
     posts = [post for post in posts if post]
     return {"posts": posts}
 
-async def get_user_posts_service(request: Request, session: AsyncSession, user_id: int):
+async def get_user_posts_service( session: AsyncSession, user_id: int):
     """Получить список постов текущего пользователя."""
     posts = await get_records_by_user_id(session, user_id)
     response = [

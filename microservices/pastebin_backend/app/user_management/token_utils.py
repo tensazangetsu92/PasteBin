@@ -12,10 +12,10 @@ def create_access_token(to_encode: dict):
     """
     Создает JWT-токен.
 
-    :param data: Данные, которые нужно закодировать в токен.
+    :param to_encode: Данные, которые нужно закодировать в токен.
     :return: Закодированный JWT-токен.
     """
-    expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt

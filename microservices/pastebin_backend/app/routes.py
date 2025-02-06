@@ -33,7 +33,7 @@ async def add_post(
 async def get_popular_posts(request: Request, session: AsyncSession = Depends(get_session)):
     logger.info(f"Fetching popular posts from {request.client.host}")
     try:
-        return await get_popular_posts_service(request, session)
+        return await get_popular_posts_service(request)
     except Exception as e:
         logger.error(f"Error fetching popular posts: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error")
@@ -57,10 +57,10 @@ async def get_post(
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @posts_router.get("/get-user-posts")
-async def get_user_posts(request: Request, session: AsyncSession = Depends(get_session), user_id: int = Depends(get_current_user_id)):
+async def get_user_posts(session: AsyncSession = Depends(get_session), user_id: int = Depends(get_current_user_id)):
     logger.info(f"Fetching posts for user {user_id}")
     try:
-        return await get_user_posts_service(request, session, user_id)
+        return await get_user_posts_service(session, user_id)
     except Exception as e:
         logger.error(f"Error fetching user posts: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error")
