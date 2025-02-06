@@ -23,7 +23,7 @@ function EditPostPage() {
     '1 year': 365 * 24 * 60 * 60,
   };
 
-  const fetchPost = async () => {
+  const fetchPost = async (shortKey) => {
     try {
       console.log(shortKey);
       const post = await getPost(shortKey);
@@ -37,7 +37,7 @@ function EditPostPage() {
   };
 
   useEffect(() => {
-    fetchPost(); // Загружаем пост при монтировании компонента
+    if (shortKey) fetchPost(shortKey); // Загружаем пост при монтировании компонента
   }, [shortKey]);
 
   const handleUpdate = async () => {
@@ -60,10 +60,8 @@ function EditPostPage() {
 
       setResponseMessage('Пост успешно обновлен!');
 
-      // После обновления поста вызываем fetchPost для обновления данных
-      fetchPost();
-
       setTimeout(() => navigate('/'), 1000);
+      window.location.reload();
     } catch (error) {
       setResponseMessage(`Ошибка: ${error.message}`);
     }

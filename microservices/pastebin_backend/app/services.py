@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .postgresql.database import async_session
 from .redis.redis import get_post_and_incr_recent_views_in_cache, cache_post, get_popular_posts_keys, \
     get_post_from_cache, \
-    increment_views_in_cache, delete_post_from_cache
+    increment_views_in_cache, delete_post_from_cache, update_cache
 from .postgresql.crud import get_record_by_short_key, get_records_by_user_id, delete_record_by_short_key, update_record
 from .yandex_bucket.storage import get_file_from_bucket, delete_file_from_bucket
 from .utils import convert_to_kilobytes, get_post_age
@@ -150,6 +150,7 @@ async def delete_post_service(
 async def update_post_service(
     short_key: str,
     post_data: PostUpdate,
+    request: Request,
     session: AsyncSession,
     user_id: int
 ):
@@ -170,6 +171,14 @@ async def update_post_service(
     updated_post = await update_record(session, short_key, post)
     if not updated_post:
         raise HTTPException(status_code=404, detail="Post not found after update")
+
+    if await get_post_from_cache(request.app.state.redis, short_key):
+        await update_cache(request.app.state.redis, short_key, {
+            "name": post_data.name,
+            "text": post_data.text,
+            "expires_at": post_data.expires_at
+        }, settings.TTL_POSTS)
+
     return updated_post
 
 

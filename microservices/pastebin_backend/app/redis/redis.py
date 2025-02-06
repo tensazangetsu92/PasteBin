@@ -43,6 +43,15 @@ async def get_post_from_cache(redis: Redis, short_key: str):
         return post_data
     return None
 
+async def update_cache(redis: Redis, short_key: str, updated_data: dict, ttl: int = 10):
+    """Обновляет пост в кэше Redis."""
+    existing_post = await get_post_from_cache(redis, short_key)
+    if existing_post:
+        existing_post.update(updated_data)  # Обновляем данные
+        existing_post["created_at"] = existing_post["created_at"].isoformat()
+        existing_post["expires_at"] = existing_post["expires_at"].isoformat()
+        await redis.set(f"popular_post:{short_key}", json.dumps(existing_post), ex=ttl)
+
 async def delete_post_from_cache(redis: Redis, short_key: str, sorted_set: str):
     """Удаляет пост по short_key из кэша Redis с использованием pipeline."""
     async with redis.pipeline() as pipe:
@@ -50,7 +59,6 @@ async def delete_post_from_cache(redis: Redis, short_key: str, sorted_set: str):
         pipe.delete(f"views:{short_key}")
         pipe.zrem(sorted_set, short_key)
         await pipe.execute()
-
 
 async def increment_views_in_cache(redis: Redis, short_key: str):
     return await redis.incr(f"views:{short_key}")
