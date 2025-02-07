@@ -8,7 +8,8 @@ class PostCreate(BaseModel):
     expires_at: datetime
 
     @field_validator('expires_at', mode='before')
-    def parse_expires_at(self, v):
+    @staticmethod
+    def parse_expires_at(cls, v):
         # Если expires_at None, установить значение по умолчанию
         if v is None:
             return datetime(2040, 12, 30, 14, 1, 49, 746000)
@@ -39,7 +40,8 @@ class PostUpdate(BaseModel):
     expires_at: Optional[datetime] = None
 
     @field_validator('expires_at', mode='before')
-    def parse_expires_at(self, v):
+    @staticmethod
+    def parse_expires_at(cls, v):
         # Если expires_at None, установить значение по умолчанию
         if v is None:
             return None

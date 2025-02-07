@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     CACHE_VIEWS_THRESHOLD: int # Минимальное количество просмотров для добавления в кэш
     TTL_POSTS: int
     TTL_VIEWS: int
-    SORTED_SET_RECENT_VIEWS: str
+    SORTED_SET_VIEWS: str
 
     HASH_SERVER_URL: str
 

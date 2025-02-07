@@ -3,13 +3,13 @@ from starlette import status
 from .auth_schemas import UserResponse, UserCreate, UserLogin
 from .auth_services import register_user_service, login_user_service, get_current_user_service
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..postgresql.database import get_session
+from ..postgresql.database import get_async_session
 from ..logger import logger
 
 auth_router = APIRouter()
 
 @auth_router.post("/register", response_model=UserResponse)
-async def register_user(user: UserCreate, session: AsyncSession = Depends(get_session)):
+async def register_user(user: UserCreate, session: AsyncSession = Depends(get_async_session)):
     logger.info(f"Attempt to register user: {user.email}")
     try:
         result = await register_user_service(user, session)
@@ -23,7 +23,7 @@ async def register_user(user: UserCreate, session: AsyncSession = Depends(get_se
         )
 
 @auth_router.post("/login")
-async def login(response: Response, user: UserLogin, session: AsyncSession = Depends(get_session)):
+async def login(response: Response, user: UserLogin, session: AsyncSession = Depends(get_async_session)):
     logger.info(f"User {user.username} attempting to log in")
     try:
         result = await login_user_service(user, session, response)
@@ -37,7 +37,7 @@ async def login(response: Response, user: UserLogin, session: AsyncSession = Dep
         )
 
 @auth_router.get("/get-current-user")
-async def get_current_user_routest(request: Request, session: AsyncSession = Depends(get_session)):
+async def get_current_user_routest(request: Request, session: AsyncSession = Depends(get_async_session)):
     logger.info(f"Fetching current user for request {request.client.host}")
     try:
         result = await get_current_user_service(request, session)

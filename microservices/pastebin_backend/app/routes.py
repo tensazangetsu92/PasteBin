@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import RedirectResponse
-from .postgresql.database import get_session
+from .postgresql.database import get_async_session
 from .services import (
     add_post_service,
-    get_text_service,
+    get_post_service,
     get_popular_posts_service,
     get_user_posts_service, delete_post_service, update_post_service,
 )
@@ -17,7 +17,7 @@ posts_router = APIRouter()
 @posts_router.post("/add-post")
 async def add_post(
     text_data: PostCreate,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = Depends(get_async_session),
     user_id: int = Depends(get_current_user_id),
 ):
     logger.info(f"User {user_id} is adding a post: {text_data}")
@@ -30,7 +30,7 @@ async def add_post(
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @posts_router.get("/get-popular-posts", response_model=PopularPostsResponse)
-async def get_popular_posts(request: Request, session: AsyncSession = Depends(get_session)):
+async def get_popular_posts(request: Request, session: AsyncSession = Depends(get_async_session)):
     logger.info(f"Fetching popular posts from {request.client.host}")
     try:
         return await get_popular_posts_service(request)
@@ -43,12 +43,12 @@ async def get_post(
     request: Request,
     short_key: str,
     background_tasks: BackgroundTasks,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_async_session),
     user_id: int = Depends(get_current_user_id),
 ):
     logger.info(f"User {user_id} is fetching post: {short_key}")
     try:
-        return await get_text_service(request, short_key, session, background_tasks)
+        return await get_post_service(request, short_key, session, background_tasks)
     except HTTPException as e:
         logger.warning(f"Post {short_key} not found: {e.detail}")
         raise e
@@ -57,7 +57,7 @@ async def get_post(
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @posts_router.get("/get-user-posts")
-async def get_user_posts(session: AsyncSession = Depends(get_session), user_id: int = Depends(get_current_user_id)):
+async def get_user_posts(session: AsyncSession = Depends(get_async_session), user_id: int = Depends(get_current_user_id)):
     logger.info(f"Fetching posts for user {user_id}")
     try:
         return await get_user_posts_service(session, user_id)
@@ -70,7 +70,7 @@ async def delete_post(
         request: Request,
         short_key: str,
         background_tasks: BackgroundTasks,
-        session: AsyncSession = Depends(get_session),
+        session: AsyncSession = Depends(get_async_session),
         user_id: int = Depends(get_current_user_id),
 ):
     try:
@@ -87,7 +87,7 @@ async def update_post(
         short_key: str,
         post_data: PostUpdate,
         request: Request,
-        db: AsyncSession = Depends(get_session),
+        db: AsyncSession = Depends(get_async_session),
         user_id: int = Depends(get_current_user_id),
 ):
     logger.info(f"User {user_id} is updating a post: {short_key} with data: {post_data}")

@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import select, delete, update
+from sqlalchemy import select, delete, update, bindparam
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from microservices.pastebin_backend.app.postgresql.models import PostOrm, UserOrm
@@ -35,7 +35,15 @@ async def get_record_by_short_key(session: AsyncSession, short_key: str):
     )
     post = result.scalar()
     if post:
-        post.views_count += 1
+        await session.commit()
+    return post
+
+async def get_record_by_id(session: AsyncSession, post_id: int):
+    result = await session.execute(
+        select(PostOrm).where(PostOrm.id == post_id)
+    )
+    post = result.scalar()
+    if post:
         await session.commit()
     return post
 
@@ -84,14 +92,16 @@ async def delete_record_and_file(session: AsyncSession, record: PostOrm):
     async with session.begin():
         await session.execute(delete(PostOrm).where(PostOrm.id == record.id))  # Удаление записи из базы данных
 
-async def update_record_views_in_db(session: AsyncSession, post_id: str, views_count: int):
-    """Прибавляет количество просмотров к существующему значению в базе данных."""
-    async with session.begin():
-        await session.execute(
-            update(PostOrm)
-            .where(PostOrm.short_key == post_id)
-            .values(views_count=PostOrm.views_count + views_count)
-        )
+async def batch_update_views(session: AsyncSession, views: dict[str, int]):
+    """Обновляет просмотры в базе данных одним batch-запросом."""
+    stmt = (
+        update(PostOrm).
+        where(PostOrm.short_key == bindparam("short_key")).
+        values(views_count=PostOrm.views_count + bindparam("views_count"))
+    )
+    params = [{"short_key": k, "views_count": v} for k, v in views.items()]
+    await session.execute(stmt, params, execution_options={"synchronize_session": None})
+    await session.commit()
 
 
 async def get_user_by_id(session: AsyncSession, user_id: int):

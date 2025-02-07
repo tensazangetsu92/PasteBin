@@ -3,9 +3,10 @@ import asyncio
 from fastapi import HTTPException, BackgroundTasks, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from .postgresql.database import async_session
-from .redis.redis import get_post_and_incr_recent_views_in_cache, cache_post, get_popular_posts_keys, \
-    get_post_from_cache, increment_views_in_cache, delete_post_from_cache, update_cache
-from .postgresql.crud import get_record_by_short_key, get_records_by_user_id, delete_record_by_short_key, update_record
+from .redis.redis import create_post_cache, get_popular_posts_keys, \
+    get_post_cache, increment_views_in_cache, delete_post_cache, update_post_cache
+from .postgresql.crud import get_record_by_short_key, get_records_by_user_id, delete_record_by_short_key, update_record, \
+    get_record_by_id
 from .yandex_bucket.storage import get_file_from_bucket, delete_file_from_bucket
 from .utils import convert_to_kilobytes, get_post_age
 from .config import settings
@@ -36,7 +37,7 @@ async def add_post_service(
     await db.commit()
     return new_post
 
-async def get_text_service(
+async def get_post_service(
     request: Request,
     short_key: str,
     session: AsyncSession,
@@ -45,60 +46,52 @@ async def get_text_service(
     """Получение текста по short_key."""
     try:
         redis = request.app.state.redis
-        background_tasks.add_task(increment_views_in_cache, redis, short_key)
-        cached_post, recent_views = await get_post_and_incr_recent_views_in_cache(redis, short_key, settings.SORTED_SET_RECENT_VIEWS)
+        cached_post = await get_post_cache(redis, short_key)
         if cached_post:
-            return json.loads(cached_post)
+            views = await increment_views_in_cache(redis, cached_post['id'], settings.SORTED_SET_VIEWS)
+            cached_post["views"] = views
+            return cached_post
         else:
             text_record = await get_record_by_short_key(session, short_key)
-            if not text_record:
-                raise HTTPException(status_code=404, detail="Text not found")
+            if not text_record: raise HTTPException(status_code=404, detail="Text not found")
             file_data = await get_file_from_bucket(text_record.blob_url)
+            views = await increment_views_in_cache(redis, text_record.id, settings.SORTED_SET_VIEWS)
             response = {
+                "id": text_record.id,
                 "name": text_record.name,
                 "text": file_data["content"],
                 "text_size_kilobytes": convert_to_kilobytes(file_data["size"]),
                 "short_key": short_key,
                 "created_at": text_record.created_at,
                 "expires_at": text_record.expires_at,
-                "views" : text_record.views_count,
+                "views" : views,
             }
-            if recent_views >= settings.CACHE_VIEWS_THRESHOLD:
-                background_tasks.add_task(cache_post, redis, short_key, response, settings.TTL_POSTS)
+            if views >= settings.CACHE_VIEWS_THRESHOLD:
+                background_tasks.add_task(create_post_cache, redis, short_key, response, settings.TTL_POSTS)
             return response
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=500, detail=f"Error retrieving text: {e}")
 
 async def get_popular_posts_service(request):
     """Получение популярных постов."""
     redis = request.app.state.redis
-    keys = await get_popular_posts_keys(redis, settings.SORTED_SET_RECENT_VIEWS)
+    post_ids = await get_popular_posts_keys(redis, settings.SORTED_SET_VIEWS)
 
-    async def fetch_post(short_key):
-        text_record_cached = await get_post_from_cache(redis, short_key)
-        if text_record_cached:
-            creation_time = get_post_age(text_record_cached['created_at'])
+    async def fetch_post(post_id):
+        async with async_session() as new_session:
+            text_record = await get_record_by_id(new_session, int(post_id))
+            if not text_record: return None
+            file_data = await get_file_from_bucket(text_record.blob_url)
+            creation_time = get_post_age(text_record.created_at)
             return {
-                "name": text_record_cached['name'],
-                "text_size_kilobytes": text_record_cached["text_size_kilobytes"],
-                "short_key": short_key,
+                "name": text_record.name,
+                "text_size_kilobytes": convert_to_kilobytes(file_data["size"]),
+                "short_key": text_record.short_key,
                 "created_at": creation_time,
-                "expires_at": text_record_cached['expires_at'],
+                "expires_at": text_record.expires_at,
             }
-        else:
-            async with async_session() as new_session:
-                text_record = await get_record_by_short_key(new_session, short_key)
-                if not text_record: return None
-                file_data = await get_file_from_bucket(text_record.blob_url)
-                creation_time = get_post_age(text_record.created_at)
-                return {
-                    "name": text_record.name,
-                    "text_size_kilobytes": convert_to_kilobytes(file_data["size"]),
-                    "short_key": short_key,
-                    "created_at": creation_time,
-                    "expires_at": text_record.expires_at,
-                }
-    posts = await asyncio.gather(*(fetch_post(short_key) for short_key in keys))
+    posts = await asyncio.gather(*(fetch_post(post_id) for post_id in post_ids))
     posts = [post for post in posts if post]
     return {"posts": posts}
 
@@ -110,7 +103,7 @@ async def get_user_posts_service( session: AsyncSession, user_id: int):
             "id": post.id,
             "name": post.name,
             "short_key": post.short_key,
-            "created_at": post.created_at,
+            "created_at": get_post_age(post.created_at),
             "expires_at": post.expires_at,
             "views": post.views_count,
         }
@@ -125,10 +118,11 @@ async def delete_post_service(
         background_tasks: BackgroundTasks
 ):
     """Удаляет пост с указанным short_key."""
-    background_tasks.add_task(delete_post_from_cache,request.app.state.redis, short_key, settings.SORTED_SET_RECENT_VIEWS)
+
     post = await delete_record_by_short_key(session, short_key)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
+    background_tasks.add_task(delete_post_cache, request.app.state.redis, short_key, post.id, settings.SORTED_SET_VIEWS)
     background_tasks.add_task(delete_file_from_bucket,settings.BUCKET_NAME, post.author_id, short_key)
     return post
 
@@ -157,8 +151,8 @@ async def update_post_service(
     if not updated_post:
         raise HTTPException(status_code=404, detail="Post not found after update")
 
-    if await get_post_from_cache(request.app.state.redis, short_key):
-        await update_cache(request.app.state.redis, short_key, {
+    if await get_post_cache(request.app.state.redis, short_key):
+        await update_post_cache(request.app.state.redis, short_key, {
             "name": post_data.name,
             "text": post_data.text,
             "expires_at": post_data.expires_at
