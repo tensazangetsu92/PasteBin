@@ -86,23 +86,14 @@ async def get_expired_records_from_db(session: AsyncSession):
         expired_records = expired_records.scalars().all()
     return expired_records
 
-async def delete_record_and_file(session: AsyncSession, record: PostOrm):
-    """Удаляет запись и файл из бакета."""
-    await delete_file_from_bucket("texts", record.author_id, record.short_key)  # Удаление файла
-    async with session.begin():
-        await session.execute(delete(PostOrm).where(PostOrm.id == record.id))  # Удаление записи из базы данных
-
 async def batch_update_views(session: AsyncSession, views: dict[str, int]):
     """Обновляет просмотры в базе данных одним batch-запросом."""
-    stmt = (
-        update(PostOrm).
-        where(PostOrm.short_key == bindparam("short_key")).
-        values(views_count=PostOrm.views_count + bindparam("views_count"))
+    await session.execute(
+        update(PostOrm),
+        [{"id": int(d), "views_count": v} for d, v in views.items()],
+        execution_options={"synchronize_session": None}
     )
-    params = [{"short_key": k, "views_count": v} for k, v in views.items()]
-    await session.execute(stmt, params, execution_options={"synchronize_session": None})
     await session.commit()
-
 
 async def get_user_by_id(session: AsyncSession, user_id: int):
     result = await session.execute(select(UserOrm).where(UserOrm.id == user_id))
