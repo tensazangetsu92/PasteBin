@@ -97,6 +97,9 @@ async def get_all_keys_sorted_set(redis_client: Redis, sorted_set: str):
     keys = await redis_client.zrange(sorted_set, 0, -1, withscores=True)
     return keys
 
+async def delete_all_keys_from_sorted_set(redis_client: Redis, sorted_set: str):
+    await redis_client.zremrangebyrank(sorted_set, 0, -1)
+
 async def delete_key_sorted_set(redis_client: Redis, sorted_set: str, short_key: str):
     await redis_client.zrem(sorted_set, short_key)
 

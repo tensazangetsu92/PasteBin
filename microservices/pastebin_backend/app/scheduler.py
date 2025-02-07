@@ -5,7 +5,7 @@ from microservices.pastebin_backend.app.config import settings
 from microservices.pastebin_backend.app.postgresql.crud import get_expired_records_from_db, \
      batch_update_views, delete_record_by_short_key
 from microservices.pastebin_backend.app.redis.redis import get_all_keys_sorted_set, delete_key_sorted_set, \
-                                                            update_score_sorted_set, delete_post_cache
+    update_score_sorted_set, delete_post_cache, delete_all_keys_from_sorted_set
 from microservices.pastebin_backend.app.yandex_bucket.storage import delete_file_from_bucket
 
 scheduler = AsyncIOScheduler()
@@ -33,12 +33,13 @@ async def delete_expired_records(redis_client: Redis, session: AsyncSession):
     except Exception as e:
         print(f"Ошибка при удалении устаревших записей: {e}")
 
-async def sync_views(redis, session: AsyncSession):
+async def sync_views(redis_client: Redis, session: AsyncSession):
     """Синхронизирует просмотры из Redis в БД одним batch-запросом."""
-    views = await get_all_keys_sorted_set(redis, settings.SORTED_SET_VIEWS)
+    views = await get_all_keys_sorted_set(redis_client, settings.SORTED_SET_VIEWS)
     if not views: return
     views_dict = {k: int(v) for k, v in views}  # Преобразуем в dict
     await batch_update_views(session, views_dict)
+    await delete_all_keys_from_sorted_set(redis_client, settings.SORTED_SET_VIEWS)
 
 
 # async def decrement_scores(redis: Redis):

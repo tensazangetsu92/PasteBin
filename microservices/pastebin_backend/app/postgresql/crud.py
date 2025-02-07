@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import select, delete, update, bindparam
+from sqlalchemy import select, delete, update, bindparam, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from microservices.pastebin_backend.app.postgresql.models import PostOrm, UserOrm
@@ -86,13 +86,16 @@ async def get_expired_records_from_db(session: AsyncSession):
         expired_records = expired_records.scalars().all()
     return expired_records
 
+
 async def batch_update_views(session: AsyncSession, views: dict[str, int]):
-    """Обновляет просмотры в базе данных одним batch-запросом."""
-    await session.execute(
-        update(PostOrm),
-        [{"id": int(d), "views_count": v} for d, v in views.items()],
-        execution_options={"synchronize_session": None}
-    )
+    """Обновляет просмотры с добавлением значений из кеша через SQL-запрос."""
+    query = text("""
+        UPDATE posts 
+        SET views_count = views_count + :v
+        WHERE id = :id
+    """)
+    for d, v in views.items():
+        await session.execute(query, {"id": int(d), "v": v})
     await session.commit()
 
 async def get_user_by_id(session: AsyncSession, user_id: int):

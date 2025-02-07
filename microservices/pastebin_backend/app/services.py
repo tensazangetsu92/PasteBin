@@ -48,8 +48,7 @@ async def get_post_service(
         redis = request.app.state.redis
         cached_post = await get_post_cache(redis, short_key)
         if cached_post:
-            views = await increment_views_in_cache(redis, cached_post['id'], settings.SORTED_SET_VIEWS)
-            cached_post["views"] = views
+            await increment_views_in_cache(redis, cached_post['id'], settings.SORTED_SET_VIEWS)
             return cached_post
         else:
             text_record = await get_record_by_short_key(session, short_key)
@@ -64,7 +63,7 @@ async def get_post_service(
                 "short_key": short_key,
                 "created_at": text_record.created_at,
                 "expires_at": text_record.expires_at,
-                "views" : views,
+                "views" : text_record.views_count,
             }
             if views >= settings.CACHE_VIEWS_THRESHOLD:
                 background_tasks.add_task(create_post_cache, redis, short_key, response, settings.TTL_POSTS)
