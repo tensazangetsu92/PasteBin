@@ -24,7 +24,7 @@ class PostResponse(BaseModel):
     text_size_kilobytes: float
     short_key: str
     created_at: str
-    expires_at: datetime
+    expires_at: str
 
     class Config:
         json_encoders = {

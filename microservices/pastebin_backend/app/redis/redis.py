@@ -60,13 +60,11 @@ async def delete_post_cache(redis_client: Redis, short_key: str, post_id: str, s
         pipe.zrem(sorted_set, post_id)
         await pipe.execute()
 
-
 async def get_popular_posts_keys(redis_client: Redis, sorted_set: str, top_n: int = 20, limit: int = 5):
     """Получить случайные limit постов из top_n самых популярных."""
-    popular_posts = await redis_client.zrevrange(sorted_set, 0, top_n - 1, withscores=False)
-    # Выбираем 5 случайных из 20
-    selected_posts = random.sample(popular_posts, min(limit, len(popular_posts)))
-    return selected_posts
+    keys = await redis_client.keys(f"popular_post:*")
+    selected_keys = random.sample(keys, min(limit, len(keys)))
+    return selected_keys
 
 async def increment_views_in_cache(redis_client: Redis, post_id: str, sorted_set: str):
     async with redis_client.pipeline() as pipe:

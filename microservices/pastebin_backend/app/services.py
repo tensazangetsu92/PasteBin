@@ -1,5 +1,7 @@
 import json
 import asyncio
+from datetime import datetime
+
 from fastapi import HTTPException, BackgroundTasks, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from .postgresql.database import async_session
@@ -72,27 +74,26 @@ async def get_post_service(
         print(e)
         raise HTTPException(status_code=500, detail=f"Error retrieving text: {e}")
 
-async def get_popular_posts_service(request):
+async def get_popular_posts_service(request: Request):
     """Получение популярных постов."""
-    redis = request.app.state.redis
-    post_ids = await get_popular_posts_keys(redis, settings.SORTED_SET_VIEWS)
+    try:
+        redis = request.app.state.redis
+        cached_popular_posts = await redis.get("most_popular_posts")
 
-    async def fetch_post(post_id):
-        async with async_session() as new_session:
-            text_record = await get_record_by_id(new_session, int(post_id))
-            if not text_record: return None
-            file_data = await get_file_from_bucket(text_record.blob_url)
-            creation_time = get_post_age(text_record.created_at)
-            return {
-                "name": text_record.name,
-                "text_size_kilobytes": convert_to_kilobytes(file_data["size"]),
-                "short_key": text_record.short_key,
-                "created_at": creation_time,
-                "expires_at": text_record.expires_at,
-            }
-    posts = await asyncio.gather(*(fetch_post(post_id) for post_id in post_ids))
-    posts = [post for post in posts if post]
-    return {"posts": posts}
+        if cached_popular_posts:
+            response = []
+            popular_posts = json.loads(cached_popular_posts)
+            for post in popular_posts:
+                if post:
+                    print(post["created_at"])
+                    post["created_at"] = get_post_age(datetime.fromisoformat(post["created_at"]))
+                    response.append(post)
+            return {"posts": response}
+        else:
+            raise HTTPException(status_code=404, detail="Популярные посты не найдены в кеше")
+    except Exception as e:
+        print(f"Ошибка при получении популярных постов: {e}")
+        raise HTTPException(status_code=500, detail="Ошибка получения популярных постов")
 
 async def get_user_posts_service( session: AsyncSession, user_id: int):
     """Получить список постов текущего пользователя."""

@@ -29,7 +29,7 @@ async def add_post(
         logger.error(f"Error adding post: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-@posts_router.get("/get-popular-posts", response_model=PopularPostsResponse)
+@posts_router.get("/get-popular-posts")
 async def get_popular_posts(request: Request, session: AsyncSession = Depends(get_async_session)):
     logger.info(f"Fetching popular posts from {request.client.host}")
     try:
