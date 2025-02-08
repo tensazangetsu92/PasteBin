@@ -51,6 +51,8 @@ async def get_post_service(
         cached_post = await get_post_cache(redis, short_key)
         if cached_post:
             await increment_views_in_cache(redis, cached_post['id'], settings.SORTED_SET_VIEWS)
+            cached_post["views"] += 1
+            background_tasks.add_task(create_post_cache,redis, cached_post["short_key"], cached_post, settings.TTL_POSTS)
             return cached_post
         else:
             text_record = await get_record_by_short_key(session, short_key)
@@ -79,13 +81,11 @@ async def get_popular_posts_service(request: Request):
     try:
         redis = request.app.state.redis
         cached_popular_posts = await redis.get("most_popular_posts")
-
         if cached_popular_posts:
             response = []
             popular_posts = json.loads(cached_popular_posts)
             for post in popular_posts:
                 if post:
-                    print(post["created_at"])
                     post["created_at"] = get_post_age(datetime.fromisoformat(post["created_at"]))
                     response.append(post)
             return {"posts": response}
@@ -107,7 +107,7 @@ async def get_user_posts_service( session: AsyncSession, user_id: int):
             "expires_at": post.expires_at,
             "views": post.views_count,
         }
-        for post in posts
+        for post in posts[:5]
     ]
     return response
 

@@ -19,7 +19,7 @@ def start_scheduler(async_session: AsyncSession, redis: Redis):
     """Настраивает и запускает планировщик."""
     scheduler.add_job(delete_expired_records, 'interval', seconds=settings.CLEANUP_EXP_POSTS_INTERVAL, args=[redis,async_session])
     scheduler.add_job(sync_views, 'interval', seconds=settings.SYNC_VIEWS_INTERVAL, args=[redis, async_session])
-    scheduler.add_job(collect_most_popular_posts, 'interval', seconds=5, args=[redis])
+    scheduler.add_job(collect_most_popular_posts, 'interval', seconds=settings.COLLECT_MOST_POPULAR_POSTS_INTERVAL, args=[redis])
     scheduler.start()
     # print("Планировщик запущен")
 
@@ -34,7 +34,6 @@ async def delete_expired_records(redis_client: Redis, session: AsyncSession):
             await delete_post_cache(redis_client, record.short_key, record.id, settings.SORTED_SET_VIEWS)
             await delete_file_from_bucket("texts", record.author_id, record.short_key)
             await delete_record_by_short_key(session, record.short_key)
-        print("Устаревшие записи удалены")
     except Exception as e:
         print(f"Ошибка при удалении устаревших записей: {e}")
 
@@ -46,7 +45,6 @@ async def sync_views(redis_client: Redis, session: AsyncSession):
     await batch_update_views(session, views_dict)
     await delete_all_keys_from_sorted_set(redis_client, settings.SORTED_SET_VIEWS)
 
-
 async def collect_most_popular_posts(redis_client: Redis):
     post_ids = await get_popular_posts_keys(redis_client, settings.SORTED_SET_VIEWS)
     async def fetch_post(post_key):
@@ -56,14 +54,6 @@ async def collect_most_popular_posts(redis_client: Redis):
             if not text_record:
                 return None
             file_data = await get_file_from_bucket(text_record.blob_url)
-            creation_time = get_post_age(text_record.created_at)
-            print({
-                "name": text_record.name,
-                "text_size_kilobytes": convert_to_kilobytes(file_data["size"]),
-                "short_key": text_record.short_key,
-                "created_at": creation_time,
-                "expires_at": text_record.expires_at.isoformat(),
-            })
             return {
                 "name": text_record.name,
                 "text_size_kilobytes": convert_to_kilobytes(file_data["size"]),
@@ -75,13 +65,3 @@ async def collect_most_popular_posts(redis_client: Redis):
     posts = await asyncio.gather(*(fetch_post(post_id) for post_id in post_ids))
     posts = [post for post in posts if post]  # Фильтруем None значения
     await redis_client.set(f"most_popular_posts", json.dumps(posts))
-
-# async def decrement_scores(redis: Redis):
-#     """Уменьшает баллы всех элементов в sorted_set на 1 и удаляет элементы с нулевым баллом."""
-#     keys = await get_all_keys_sorted_set(redis, settings.SORTED_SET_VIEWS)
-#     for key, score in keys:
-#         new_score = score - 1
-#         if new_score <= 0:
-#             await delete_key_sorted_set(redis, settings.SORTED_SET_VIEWS, key)
-#         else:
-#             await update_score_sorted_set(redis, settings.SORTED_SET_VIEWS, key, new_score)

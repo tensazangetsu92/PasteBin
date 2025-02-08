@@ -1,7 +1,6 @@
 import json
 import random
 from datetime import datetime
-from typing import Dict
 import redis.asyncio as redis
 from redis.asyncio import Redis
 from microservices.pastebin_backend.app.config import settings
@@ -32,7 +31,6 @@ async def disconnect_from_redis(redis_client: redis.Redis):
 async def create_post_cache(redis_client: Redis, short_key: str, post_data: dict, ttl: int = 10):
     post_data["created_at"] = post_data["created_at"].isoformat()
     post_data["expires_at"] = post_data["expires_at"].isoformat()
-    print(type(json.dumps(post_data)))
     await redis_client.set(f"popular_post:{short_key}", json.dumps(post_data), ex=ttl)
 
 async def get_post_cache(redis_client: Redis, short_key: str):
@@ -73,6 +71,8 @@ async def increment_views_in_cache(redis_client: Redis, post_id: str, sorted_set
         results = await pipe.execute()
         views = results[1]
     return views
+
+
 
 # async def get_all_views_from_cache(redis_client: Redis) -> Dict[str, int]:
 #     """Получает все просмотры из кеша."""

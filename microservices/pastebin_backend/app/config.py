@@ -33,7 +33,8 @@ class Settings(BaseSettings):
 
     CLEANUP_EXP_POSTS_INTERVAL: int
     SYNC_VIEWS_INTERVAL: int
-    DECREMENT_RECENT_VIEWS_INTERVAL: int
+    COLLECT_MOST_POPULAR_POSTS_INTERVAL: int
+
 
     @property
     def database_url_asyncpg(self):
