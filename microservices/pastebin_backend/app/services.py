@@ -104,12 +104,12 @@ async def get_user_posts_service( session: AsyncSession, user_id: int):
             "name": post.name,
             "short_key": post.short_key,
             "created_at": get_post_age(post.created_at),
-            "expires_at": post.expires_at,
+            "expires_at": post.expires_at.isoformat(),
             "views": post.views_count,
         }
         for post in posts[:5]
     ]
-    return response
+    return {"posts": response}
 
 async def delete_post_service(
         short_key: str,
@@ -138,26 +138,21 @@ async def update_post_service(
         raise HTTPException(status_code=404, detail="Post not found")
     if post.author_id != user_id:
         raise HTTPException(status_code=403, detail="You do not have permission to update this post")
-
     if post_data.text is not None:
         await upload_file_to_bucket(settings.BUCKET_NAME, user_id, short_key, post_data.text)
-
     if post_data.name is not None:
         post.name = post_data.name
     if post_data.expires_at is not None:
         post.expires_at = post_data.expires_at
-
     updated_post = await update_record(session, short_key, post)
     if not updated_post:
         raise HTTPException(status_code=404, detail="Post not found after update")
-
     if await get_post_cache(request.app.state.redis, short_key):
         await update_post_cache(request.app.state.redis, short_key, {
             "name": post_data.name,
             "text": post_data.text,
             "expires_at": post_data.expires_at
         }, settings.TTL_POSTS)
-
     return updated_post
 
 

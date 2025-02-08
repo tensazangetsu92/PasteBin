@@ -37,7 +37,7 @@ async def login(response: Response, user: UserLogin, session: AsyncSession = Dep
         )
 
 @auth_router.get("/get-current-user")
-async def get_current_user_routest(request: Request, session: AsyncSession = Depends(get_async_session)):
+async def get_current_user(request: Request, session: AsyncSession = Depends(get_async_session)):
     logger.info(f"Fetching current user for request {request.client.host}")
     try:
         result = await get_current_user_service(request, session)

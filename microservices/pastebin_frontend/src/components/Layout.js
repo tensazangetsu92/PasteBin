@@ -22,6 +22,7 @@ function Layout({ children }) {
     const fetchPopularPosts = async () => {
       try {
         const posts = await getPopularPosts();
+        console.log(posts);
         setPopularPosts(posts);
       } catch (error) {
         console.error('Ошибка при получении популярных постов:', error);
@@ -37,6 +38,7 @@ function Layout({ children }) {
       if (currentUser) {
         try {
           const posts = await getUserPosts();
+          console.log(posts);
           setUserPosts(posts);
         } catch (error) {
           console.error('Ошибка загрузки постов пользователя:', error);
@@ -104,7 +106,7 @@ function Layout({ children }) {
                   {popularPosts.posts.map((post, index) => (
                     <li key={index} style={{ marginBottom: '10px', color: '#999999' }}>
                       <Link to={`/${post.short_key}`} style={{textDecoration: 'none'}}>
-                        <strong style={{ color: '#3a83d2'}}>{post.name}</strong>
+                        <strong style={{color: '#3a83d2'}}>{post.name}</strong>
                       </Link>
                       <br />
                       Размер текста: {post.text_size_kilobytes} KB
@@ -120,11 +122,11 @@ function Layout({ children }) {
           </div>
 
           {/* Мои посты */}
-          {currentUser && userPosts.length > 0 && (
+          {currentUser && userPosts.posts && (
             <div style={{ margin: '20px', padding: '10px'}}>
               <h2 style = {{color: '#dddddd'}}>Мои посты</h2>
               <ul>
-                {userPosts.map((post) => (
+                {userPosts.posts.map((post) => (
                   <li key={post.id} style={{ marginBottom: '10px', color: '#999999' }}>
                     <Link to={`/${post.short_key}`} style={{textDecoration: 'none'}}>
                       <strong style={{ color: '#3a83d2'}}>{post.name}</strong>

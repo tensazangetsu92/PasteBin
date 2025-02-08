@@ -1,5 +1,5 @@
 from pydantic import BaseModel, HttpUrl, validator, EmailStr, field_validator
-from typing import Optional, List
+from typing import Optional, Dict, List
 from datetime import datetime
 
 class PostCreate(BaseModel):
@@ -19,6 +19,34 @@ class PostCreate(BaseModel):
             return datetime.fromisoformat(v)
         return v  # В случае уже валидного datetime
 
+
+class GetPostResponse(BaseModel):
+    id: int
+    name: str
+    text: str
+    text_size_kilobytes: float
+    short_key: str
+    created_at: datetime
+    expires_at: datetime
+    views: int
+
+
+class UserPostResponse(BaseModel):
+    id: int
+    name: str
+    short_key: str
+    created_at: str  # Если `get_post_age` возвращает строку
+    expires_at: str
+    views: int
+
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat(timespec='milliseconds')
+        }
+class UserPostsResponse(BaseModel):
+    posts: List[UserPostResponse]
+
+
 class PostResponse(BaseModel):
     name: str
     text_size_kilobytes: float
@@ -32,7 +60,6 @@ class PostResponse(BaseModel):
         }
 class PopularPostsResponse(BaseModel):
     posts: List[PostResponse]
-
 
 class PostUpdate(BaseModel):
     name: Optional[str] = None

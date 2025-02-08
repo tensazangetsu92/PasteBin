@@ -56,5 +56,4 @@ def get_current_user_id(request: Request):
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Токен недействителен")
     except Exception as e:
-        print(e)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Ошибка при проверке токена")

@@ -8,7 +8,7 @@ from .services import (
     get_popular_posts_service,
     get_user_posts_service, delete_post_service, update_post_service,
 )
-from .schemas import PostCreate, PopularPostsResponse, PostUpdate
+from .schemas import PostCreate, PopularPostsResponse, PostUpdate, GetPostResponse, UserPostsResponse
 from .user_management.token_utils import get_current_user_id
 from .logger import logger
 
@@ -24,13 +24,12 @@ async def add_post(
     try:
         result = await add_post_service(text_data, db, user_id)
         logger.info(f"Post added successfully: {result}")
-        return result
     except Exception as e:
         logger.error(f"Error adding post: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-@posts_router.get("/get-popular-posts")
-async def get_popular_posts(request: Request, session: AsyncSession = Depends(get_async_session)):
+@posts_router.get("/get-popular-posts", response_model=PopularPostsResponse)
+async def get_popular_posts(request: Request):
     logger.info(f"Fetching popular posts from {request.client.host}")
     try:
         return await get_popular_posts_service(request)
@@ -38,7 +37,7 @@ async def get_popular_posts(request: Request, session: AsyncSession = Depends(ge
         logger.error(f"Error fetching popular posts: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-@posts_router.get("/get-post/{short_key}")
+@posts_router.get("/get-post/{short_key}", response_model=GetPostResponse)
 async def get_post(
     request: Request,
     short_key: str,
@@ -56,7 +55,7 @@ async def get_post(
         logger.error(f"Error fetching post {short_key}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-@posts_router.get("/get-user-posts")
+@posts_router.get("/get-user-posts", response_model=UserPostsResponse)
 async def get_user_posts(session: AsyncSession = Depends(get_async_session), user_id: int = Depends(get_current_user_id)):
     logger.info(f"Fetching posts for user {user_id}")
     try:
@@ -76,11 +75,10 @@ async def delete_post(
     try:
         post = await delete_post_service(short_key, request, session, background_tasks)
         logger.info(f"User {user_id} is deleting a post: {post}")
-        return {"message": "Post deleted successfully", "post": post}
+        return {"message": "Post deleted successfully"}
     except HTTPException as e:
         logger.error(f"Error deleting post: {e}", exc_info=True)
         raise e
-
 
 @posts_router.patch("/update-post/{short_key}")
 async def update_post(
