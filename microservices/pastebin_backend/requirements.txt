@@ -16,3 +16,4 @@ pydantic[email]
 python-jose
 bcrypt
 psycopg2
+pytest-asyncio
