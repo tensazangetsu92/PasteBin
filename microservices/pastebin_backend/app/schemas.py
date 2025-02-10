@@ -1,4 +1,4 @@
-from pydantic import BaseModel, HttpUrl, validator, EmailStr, field_validator
+from pydantic import BaseModel, HttpUrl, validator, EmailStr, field_validator, Field
 from typing import Optional, Dict, List
 from datetime import datetime
 
@@ -7,8 +7,8 @@ class PostCreate(BaseModel):
     text: str = "Some text"
     expires_at: datetime
 
-    @field_validator('expires_at', mode='before')
-    @staticmethod
+    @field_validator('expires_at')
+    @classmethod
     def parse_expires_at(cls, v):
         # Если expires_at None, установить значение по умолчанию
         if v is None:
@@ -39,10 +39,11 @@ class UserPostResponse(BaseModel):
     expires_at: str
     views: int
 
-    class Config:
-        json_encoders = {
+    model_config = {
+        'json_encoders': {
             datetime: lambda v: v.isoformat(timespec='milliseconds')
         }
+    }
 class UserPostsResponse(BaseModel):
     posts: List[UserPostResponse]
 
@@ -54,10 +55,11 @@ class PostResponse(BaseModel):
     created_at: str
     expires_at: str
 
-    class Config:
-        json_encoders = {
+    model_config = {
+        'json_encoders': {
             datetime: lambda v: v.isoformat(timespec='milliseconds')
         }
+    }
 class PopularPostsResponse(BaseModel):
     posts: List[PostResponse]
 
