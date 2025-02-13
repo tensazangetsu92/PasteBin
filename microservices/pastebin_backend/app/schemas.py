@@ -5,19 +5,17 @@ from datetime import datetime
 class PostCreate(BaseModel):
     name: str = "Untitled"
     text: str = "Some text"
-    expires_at: datetime
+    expires_at: Optional[datetime]
 
     @field_validator('expires_at')
     @classmethod
     def parse_expires_at(cls, v):
-        # Если expires_at None, установить значение по умолчанию
         if v is None:
             return datetime(2040, 12, 30, 14, 1, 49, 746000)
-        # Если значение в формате ISO, преобразовать в datetime
         if isinstance(v, str):
             v = v.replace("Z", "+00:00")
             return datetime.fromisoformat(v)
-        return v  # В случае уже валидного datetime
+        return v
 
 
 class GetPostResponse(BaseModel):
@@ -35,7 +33,7 @@ class UserPostResponse(BaseModel):
     id: int
     name: str
     short_key: str
-    created_at: str  # Если `get_post_age` возвращает строку
+    created_at: str
     expires_at: str
     views: int
 
@@ -69,12 +67,10 @@ class PostUpdate(BaseModel):
     @field_validator('expires_at', mode='before')
     @staticmethod
     def parse_expires_at(cls, v):
-        # Если expires_at None, установить значение по умолчанию
         if v is None:
             return None
-        # Если значение в формате ISO, преобразовать в datetime
         if isinstance(v, str):
             v = v.replace("Z", "+00:00")
             return datetime.fromisoformat(v)
-        return v  # В случае уже валидного datetime
+        return v
 

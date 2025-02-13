@@ -69,6 +69,7 @@ async def get_post_service(
                 "expires_at": text_record.expires_at,
                 "views" : text_record.views_count,
             }
+
             if views >= settings.CACHE_VIEWS_THRESHOLD:
                 background_tasks.add_task(create_post_cache, redis, short_key, response, settings.TTL_POSTS)
             return response
