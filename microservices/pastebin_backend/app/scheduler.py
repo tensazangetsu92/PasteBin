@@ -8,7 +8,7 @@ from microservices.pastebin_backend.app.config import settings
 from microservices.pastebin_backend.app.postgresql_db.crud import get_expired_records_from_db, \
     batch_update_views, delete_record_by_short_key, get_record_by_id, get_record_by_short_key
 from microservices.pastebin_backend.app.postgresql_db.database import async_session
-from microservices.pastebin_backend.app.redis_cache.redis import get_all_keys_sorted_set, delete_key_sorted_set, \
+from microservices.pastebin_backend.app.redis_cache.cache import get_all_keys_sorted_set, delete_key_sorted_set, \
     update_score_sorted_set, delete_post_cache, delete_all_keys_from_sorted_set, get_popular_posts_keys
 from microservices.pastebin_backend.app.utils import get_post_age, convert_to_kilobytes
 from microservices.pastebin_backend.app.yandex_bucket.storage import delete_file_from_bucket, get_file_from_bucket

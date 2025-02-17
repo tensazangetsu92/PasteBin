@@ -4,8 +4,10 @@ from sqlalchemy import select, delete, update, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from microservices.pastebin_backend.app.postgresql_db.models import PostOrm, UserOrm
+from microservices.pastebin_backend.app.retry_config import db_retry
 
 
+@db_retry
 async def create_record(
     session: AsyncSession,
     object_name: str,
@@ -27,6 +29,7 @@ async def create_record(
     await session.refresh(new_text)
     return new_text
 
+@db_retry
 async def get_record_by_short_key(session: AsyncSession, short_key: str):
     result = await session.execute(
         select(PostOrm).where(PostOrm.short_key == short_key)
@@ -36,6 +39,7 @@ async def get_record_by_short_key(session: AsyncSession, short_key: str):
         await session.commit()
     return post
 
+@db_retry
 async def get_record_by_id(session: AsyncSession, post_id: int):
     result = await session.execute(
         select(PostOrm).where(PostOrm.id == post_id)
@@ -45,6 +49,7 @@ async def get_record_by_id(session: AsyncSession, post_id: int):
         await session.commit()
     return post
 
+@db_retry
 async def update_record(
     session: AsyncSession,
     short_key: str,
@@ -62,6 +67,7 @@ async def update_record(
     await session.refresh(post)
     return post
 
+@db_retry
 async def delete_record_by_short_key(session: AsyncSession, short_key: str):
     post = await get_record_by_short_key(session, short_key)  # Получаем запись
     if not post:
@@ -74,6 +80,7 @@ async def get_records_by_user_id(session: AsyncSession, user_id: int):
     result = await session.execute(select(PostOrm).where(PostOrm.author_id == user_id))
     return result.scalars().all()
 
+@db_retry
 async def get_expired_records_from_db(session: AsyncSession):
     """Удаляет записи с истекшим сроком действия из базы данных."""
     now = datetime.now()
@@ -84,7 +91,7 @@ async def get_expired_records_from_db(session: AsyncSession):
         expired_records = expired_records.scalars().all()
     return expired_records
 
-
+@db_retry
 async def batch_update_views(session: AsyncSession, views: dict[str, int]):
     """Обновляет просмотры с добавлением значений из кеша через SQL-запрос."""
     query = text("""
@@ -96,18 +103,22 @@ async def batch_update_views(session: AsyncSession, views: dict[str, int]):
         await session.execute(query, {"id": int(d), "v": v})
     await session.commit()
 
+@db_retry
 async def get_user_by_id(session: AsyncSession, user_id: int):
     result = await session.execute(select(UserOrm).where(UserOrm.id == user_id))
     return result.scalar_one_or_none()
 
+@db_retry
 async def get_user_by_username(session: AsyncSession, username: str):
     db_user = await session.execute(select(UserOrm).where(UserOrm.username == username))
     return db_user.scalar_one_or_none()
 
+@db_retry
 async def get_user_by_email(session: AsyncSession, email: str):
     existing_user = await session.execute(select(UserOrm).where(UserOrm.email == email))
     return existing_user.scalar_one_or_none()
 
+@db_retry
 async def create_user(session: AsyncSession, username: str, email: str, hashed_password: str) -> UserOrm:
     new_user = UserOrm(username=username, email=email, hashed_password=hashed_password)
     session.add(new_user)

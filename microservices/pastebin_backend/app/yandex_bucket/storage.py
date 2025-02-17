@@ -3,6 +3,7 @@ from typing import BinaryIO
 import boto3
 from botocore.exceptions import ClientError
 from microservices.pastebin_backend.app.config import settings
+from microservices.pastebin_backend.app.retry_config import s3_retry
 from microservices.pastebin_backend.app.utils import parse_blob_url
 
 # Инициализация клиента для Yandex Object Storage
@@ -13,6 +14,7 @@ s3_client = boto3.client(
     aws_secret_access_key=settings.BUCKET_SECRET_KEY,
 )
 
+@s3_retry
 async def upload_file_to_bucket(bucket_name: str, author_id: int, short_key: str, text: str):
     """Загрузка файла в Yandex Object Storage."""
     try:
@@ -23,6 +25,7 @@ async def upload_file_to_bucket(bucket_name: str, author_id: int, short_key: str
     except Exception as e:
         raise Exception(f"Ошибка загрузки файла в бакет: {e}")
 
+@s3_retry
 async def get_file_from_bucket(blob_url: str) -> dict:
     """Получение содержимого файла и его размера из бакета за один запрос."""
     try:
@@ -37,6 +40,7 @@ async def get_file_from_bucket(blob_url: str) -> dict:
     except ClientError as e:
         raise Exception(f"Error retrieving file and metadata from bucket: {e}")
 
+@s3_retry
 async def delete_file_from_bucket(bucket_name: str, author_id: int, object_short_key: str):
     """Удаление файла из бакета по URL ."""
     object_url_in_bucket = f"{author_id}/{object_short_key}.txt"
