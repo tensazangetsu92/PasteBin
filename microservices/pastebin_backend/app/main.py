@@ -1,12 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from contextlib import asynccontextmanager
 from starlette.responses import JSONResponse
-from .postgresql.database import create_tables, delete_tables, async_session
-from .redis.redis import connect_to_redis, disconnect_from_redis
+from .postgresql_db.database import create_tables, async_session
+from .redis_cache.redis import connect_to_redis, disconnect_from_redis
 from .scheduler import start_scheduler, terminate_scheduler
 from .middlewares import setup_cors
-from .routes import posts_router
-from .user_management.auth_routes import auth_router
+from microservices.pastebin_backend.app.routes.posts_routes import posts_router
+from microservices.pastebin_backend.app.routes.auth_routes import auth_router
 
 
 @asynccontextmanager

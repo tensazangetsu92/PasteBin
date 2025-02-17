@@ -1,11 +1,9 @@
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import select, delete, update, bindparam, text
+from sqlalchemy import select, delete, update, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from microservices.pastebin_backend.app.postgresql.models import PostOrm, UserOrm
-from microservices.pastebin_backend.app.schemas import PostUpdate
-from microservices.pastebin_backend.app.yandex_bucket.storage import delete_file_from_bucket, upload_file_to_bucket
+from microservices.pastebin_backend.app.postgresql_db.models import PostOrm, UserOrm
 
 
 async def create_record(

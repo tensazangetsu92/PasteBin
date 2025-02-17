@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
 from microservices.pastebin_backend.app.main import app
-from microservices.pastebin_backend.app.postgresql.database import get_async_session
+from microservices.pastebin_backend.app.postgresql_db.database import get_async_session
 from microservices.pastebin_backend.app.user_management.token_utils import get_current_user_id
 from microservices.pastebin_backend.app.services import get_hash, get_record_by_short_key, upload_file_to_bucket, create_record
 
@@ -23,7 +23,7 @@ def override_get_db():
 
 @pytest.fixture
 def mock_redis():
-    # Мокируем объект redis
+    # Мокируем объект redis_cache
     mock_redis = AsyncMock()
     return mock_redis
 

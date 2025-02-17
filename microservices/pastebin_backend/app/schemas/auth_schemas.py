@@ -1,4 +1,4 @@
-# schemas.py
+# posts_schemas.py
 from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional
 

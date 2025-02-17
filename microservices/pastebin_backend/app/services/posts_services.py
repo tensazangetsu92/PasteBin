@@ -1,21 +1,17 @@
 import json
-import asyncio
 from datetime import datetime
 
 from fastapi import HTTPException, BackgroundTasks, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from .postgresql.database import async_session
-from .redis.redis import create_post_cache, get_popular_posts_keys, \
-    get_post_cache, increment_views_in_cache, delete_post_cache, update_post_cache
-from .postgresql.crud import get_record_by_short_key, get_records_by_user_id, delete_record_by_short_key, update_record, \
-    get_record_by_id
-from .yandex_bucket.storage import get_file_from_bucket, delete_file_from_bucket
-from .utils import convert_to_kilobytes, get_post_age
-from .config import settings
-from .postgresql.crud import create_record
-from .yandex_bucket.storage import upload_file_to_bucket
-from .schemas import PostCreate, PostUpdate
-from .utils import get_hash
+from microservices.pastebin_backend.app.redis_cache.redis import create_post_cache, get_post_cache, increment_views_in_cache, delete_post_cache, update_post_cache
+from microservices.pastebin_backend.app.postgresql_db.crud import get_record_by_short_key, get_records_by_user_id, delete_record_by_short_key, update_record
+from microservices.pastebin_backend.app.yandex_bucket.storage import get_file_from_bucket, delete_file_from_bucket
+from microservices.pastebin_backend.app.utils import convert_to_kilobytes, get_post_age
+from microservices.pastebin_backend.app.config import settings
+from microservices.pastebin_backend.app.postgresql_db.crud import create_record
+from microservices.pastebin_backend.app.yandex_bucket.storage import upload_file_to_bucket
+from microservices.pastebin_backend.app.schemas.posts_schemas import PostCreate, PostUpdate
+from microservices.pastebin_backend.app.utils import get_hash
 
 
 async def add_post_service(
