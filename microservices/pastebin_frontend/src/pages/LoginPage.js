@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
 import { loginUser } from '../api/auth';
 
 function LoginPage() {
@@ -7,6 +8,8 @@ function LoginPage() {
   const [password, setPassword] = useState('');
   const [responseMessage, setResponseMessage] = useState('');
   const navigate = useNavigate();
+
+  const { loginWithRedirect, isAuthenticated, user } = useAuth0(); // Доступ к Auth0
 
   const handleLogin = async () => {
     try {
@@ -21,6 +24,10 @@ function LoginPage() {
     } catch (error) {
       setResponseMessage(error.message);
     }
+  };
+
+  const handleAuth0Login = () => {
+    loginWithRedirect();
   };
 
   return (
@@ -39,6 +46,10 @@ function LoginPage() {
         onChange={(e) => setPassword(e.target.value)}
       />
       <button onClick={handleLogin}>Войти</button>
+
+      {/* Кнопка для входа через Auth0 */}
+      <button onClick={handleAuth0Login}>Войти через Auth0</button>
+
       {responseMessage && <p>{responseMessage}</p>}
     </div>
   );
