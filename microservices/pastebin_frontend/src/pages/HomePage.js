@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { addPost, getPopularPosts, getUserPosts } from '../api/posts';
+import { addPost } from '../api/posts';
 import { getCurrentUser } from '../api/auth';
 
 function HomePage() {

@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase
-from microservices.pastebin_backend.app.config import settings
+from ..config import settings
 
 
 engine = create_async_engine(

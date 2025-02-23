@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
-from microservices.pastebin_backend.app.postgresql_db.database import get_async_session
-from microservices.pastebin_backend.app.services import (
+from ..postgresql_db.database import get_async_session
+from ..services.posts_services import (
     add_post_service,
     get_post_service,
     get_popular_posts_service,
     get_user_posts_service, delete_post_service, update_post_service,
 )
-from microservices.pastebin_backend.app.schemas.posts_schemas import PostCreate, PopularPostsResponse, PostUpdate, GetPostResponse, UserPostsResponse
-from microservices.pastebin_backend.app.user_management.token_utils import get_current_user_id
-from microservices.pastebin_backend.app.logger import logger
+from ..schemas.posts_schemas import PostCreate, PopularPostsResponse, PostUpdate, GetPostResponse, UserPostsResponse
+from ..user_management.token_utils import get_current_user_id
+from ..logger import logger
 
 posts_router = APIRouter()
 

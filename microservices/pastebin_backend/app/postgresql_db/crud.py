@@ -3,8 +3,8 @@ from typing import Optional
 from sqlalchemy import select, delete, update, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from microservices.pastebin_backend.app.postgresql_db.models import PostOrm, UserOrm
-from microservices.pastebin_backend.app.retry_config import db_retry
+from .models import PostOrm, UserOrm
+from ..retry_config import db_retry
 
 
 @db_retry

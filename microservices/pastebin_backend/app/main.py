@@ -5,8 +5,8 @@ from .postgresql_db.database import create_tables, async_session
 from .redis_cache.cache import connect_to_redis, disconnect_from_redis
 from .scheduler import start_scheduler, terminate_scheduler
 from .middlewares import setup_cors
-from microservices.pastebin_backend.app.routes.posts_routes import posts_router
-from microservices.pastebin_backend.app.routes.auth_routes import auth_router
+from .routes.posts_routes import posts_router
+from .routes.auth_routes import auth_router
 
 
 @asynccontextmanager

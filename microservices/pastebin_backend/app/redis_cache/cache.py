@@ -3,8 +3,8 @@ import random
 from datetime import datetime
 import redis.asyncio as redis
 from redis.asyncio import Redis
-from microservices.pastebin_backend.app.config import settings
-from microservices.pastebin_backend.app.retry_config import cache_retry
+from ..config import settings
+from ..retry_config import cache_retry
 
 
 @cache_retry

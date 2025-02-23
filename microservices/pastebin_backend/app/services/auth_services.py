@@ -1,11 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, Request
 from fastapi import Response
-from microservices.pastebin_backend.app.postgresql_db.crud import get_user_by_email, create_user, get_user_by_username, \
+from ..postgresql_db.crud import get_user_by_email, create_user, get_user_by_username, \
     get_user_by_id
-from microservices.pastebin_backend.app.user_management.password_utils import hash_password, verify_password
-from microservices.pastebin_backend.app.user_management.token_utils import create_access_token, get_current_user_id
-from microservices.pastebin_backend.app.schemas.auth_schemas import UserCreate, UserResponse, UserLogin
+from ..user_management.password_utils import hash_password, verify_password
+from ..user_management.token_utils import create_access_token, get_current_user_id
+from ..schemas.auth_schemas import UserCreate, UserResponse, UserLogin
 
 
 async def register_user_service(user: UserCreate, session: AsyncSession) -> UserResponse:

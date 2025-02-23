@@ -1,14 +1,13 @@
 import json
 from datetime import datetime
-
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
-from microservices.pastebin_backend.app.main import app
-from microservices.pastebin_backend.app.postgresql_db.database import get_async_session
-from microservices.pastebin_backend.app.user_management.token_utils import get_current_user_id
-from microservices.pastebin_backend.app.services import get_hash, get_record_by_short_key, upload_file_to_bucket, create_record
+from ..app.main import app
+from ..app.postgresql_db.database import get_async_session
+from ..app.user_management.token_utils import get_current_user_id
+from ..app.services.posts_services import get_hash, get_record_by_short_key, upload_file_to_bucket, create_record
 
 client = TestClient(app)
 

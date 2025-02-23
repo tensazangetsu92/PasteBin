@@ -1,4 +1,5 @@
 fastapi
+fastapi[standard]
 uvicorn
 sqlalchemy
 asyncpg
@@ -15,6 +16,5 @@ passlib
 pydantic[email]
 python-jose
 bcrypt
-psycopg2
 pytest-asyncio
 tenacity

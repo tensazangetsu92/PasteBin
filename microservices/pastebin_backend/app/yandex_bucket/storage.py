@@ -2,9 +2,9 @@ from io import BytesIO
 from typing import BinaryIO
 import boto3
 from botocore.exceptions import ClientError
-from microservices.pastebin_backend.app.config import settings
-from microservices.pastebin_backend.app.retry_config import s3_retry
-from microservices.pastebin_backend.app.utils import parse_blob_url
+from ..config import settings
+from ..retry_config import s3_retry
+from ..utils import parse_blob_url
 
 # Инициализация клиента для Yandex Object Storage
 s3_client = boto3.client(

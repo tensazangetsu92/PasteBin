@@ -1,9 +1,7 @@
 from datetime import datetime
-
 import httpx
 from fastapi import HTTPException
-
-from microservices.pastebin_backend.app.config import settings
+from .config import settings
 
 
 async def get_hash() -> str:

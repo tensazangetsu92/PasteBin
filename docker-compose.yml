@@ -1,0 +1,42 @@
+services:
+  hash_server:
+    build: ./microservices/hash_server
+    container_name: hash_server
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./microservices/hash_server/.env  # Подключаем .env
+
+  pastebin_backend:
+    build: ./microservices/pastebin_backend
+    container_name: api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - ./microservices/pastebin_backend/.env  # Подключаем .env
+
+  pastebin_frontend:
+    build: ./microservices/pastebin_frontend
+    container_name: ui
+    ports:
+      - "3000:3000"
+    depends_on:
+      - pastebin_backend
+
+  db:
+    image: postgres:15
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 14qrasdfCV
+      POSTGRES_DB: pastebin
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  pg_data:

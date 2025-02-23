@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
 from starlette import status
-from microservices.pastebin_backend.app.schemas.auth_schemas import UserResponse, UserCreate, UserLogin
-from microservices.pastebin_backend.app.services.auth_services import register_user_service, login_user_service, get_current_user_service
+from ..schemas.auth_schemas import UserResponse, UserCreate, UserLogin
+from ..services.auth_services import register_user_service, login_user_service, get_current_user_service
 from sqlalchemy.ext.asyncio import AsyncSession
-from microservices.pastebin_backend.app.postgresql_db.database import get_async_session
-from microservices.pastebin_backend.app.logger import logger
+from ..postgresql_db.database import get_async_session
+from ..logger import logger
 
 auth_router = APIRouter()
 

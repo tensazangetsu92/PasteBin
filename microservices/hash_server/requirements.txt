@@ -1,4 +1,9 @@
+uvicorn
 fastapi
+fastapi[standard]
 httpx
 redis
 setuptools
+apscheduler
+pydantic
+pydantic-settings

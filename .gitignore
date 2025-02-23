@@ -2,4 +2,7 @@
 .idea/
 microservices/pastebin_backend/.env
 microservices/pastebin_backend/app.log
-
+microservices/pastebin_backend/certificate.crt
+microservices/pastebin_backend/private.key
+.docker-compose.yml
+.qodana.yaml
