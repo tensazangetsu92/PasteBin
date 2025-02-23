@@ -9,7 +9,6 @@ from ..schemas.auth_schemas import UserCreate, UserResponse, UserLogin
 
 
 async def register_user_service(user: UserCreate, session: AsyncSession) -> UserResponse:
-    """Сервис для регистрации нового пользователя."""
     existing_user = await get_user_by_email(session, str(user.email))
     if existing_user:
         raise HTTPException(status_code=400, detail="Email уже зарегистрирован")
