@@ -17,14 +17,6 @@ services:
     env_file:
       - ./microservices/pastebin_backend/.env  # Подключаем .env
 
-  pastebin_frontend:
-    build: ./microservices/pastebin_frontend
-    container_name: ui
-    ports:
-      - "3000:3000"
-    depends_on:
-      - pastebin_backend
-
   db:
     image: postgres:15
     container_name: db
@@ -37,6 +29,17 @@ services:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"   # Раздача через порт 80
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf   # Подключаем конфиг Nginx
+      - ./nginx/build:/usr/share/nginx/html  # React build
+    depends_on:
+      - pastebin_backend
 
 volumes:
   pg_data:

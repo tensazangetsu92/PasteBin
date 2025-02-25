@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { getPopularPosts, getUserPosts } from '../api/posts';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCurrentUser, logoutUser } from '../api/auth';
+import '../index.css';
+
 
 function Layout({ children }) {
   const navigate = useNavigate();

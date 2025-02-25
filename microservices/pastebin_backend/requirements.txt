@@ -17,3 +17,4 @@ pydantic[email]
 bcrypt
 pytest-asyncio
 tenacity
+python-jose
