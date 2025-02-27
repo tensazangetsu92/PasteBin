@@ -3,15 +3,32 @@ services:
     build: ./microservices/hash_server
     container_name: hash_server
     ports:
-      - "8001:8001"
+      - "8010:8010"
     env_file:
       - ./microservices/hash_server/.env  # Подключаем .env
 
-  pastebin_backend:
+  pastebin_backend_1:
     build: ./microservices/pastebin_backend
-    container_name: api
     ports:
       - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - ./microservices/pastebin_backend/.env  # Подключаем .env
+
+  pastebin_backend_2:
+    build: ./microservices/pastebin_backend
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+    env_file:
+      - ./microservices/pastebin_backend/.env  # Подключаем .env
+
+  pastebin_backend_3:
+    build: ./microservices/pastebin_backend
+    ports:
+      - "8002:8000"
     depends_on:
       - db
     env_file:
@@ -39,7 +56,9 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf   # Подключаем конфиг Nginx
       - ./nginx/build:/usr/share/nginx/html  # React build
     depends_on:
-      - pastebin_backend
+      - pastebin_backend_1
+      - pastebin_backend_2
+      - pastebin_backend_3
 
 volumes:
   pg_data:

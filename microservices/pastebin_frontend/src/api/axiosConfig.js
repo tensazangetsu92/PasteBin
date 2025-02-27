@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: 'http://localhost:8000/',
   withCredentials: true, // Разрешаем отправку куков
   headers: {
     'Content-Type': 'application/json',
